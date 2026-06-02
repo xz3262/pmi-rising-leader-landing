@@ -59,7 +59,6 @@
     setText('etCompany', order.company || '——');
     setText('etPay', order.payMethodLabel || '——');
     var ticketOrderId = order.merchantOrderNo || order.orderId || orderId;
-    setText('qrOrder', '商户单号 ' + ticketOrderId);
     showVerifyQR(ticketOrderId);
   }
 
@@ -79,13 +78,6 @@
     img.decoding = 'sync';
     img.src = '/api/qr?w=' + renderPx + '&data=' + encodeURIComponent(verifyUrl);
     canvas.replaceWith(img);
-
-    var linkEl = document.getElementById('qrLink');
-    if (linkEl) {
-      linkEl.href = verifyUrl;
-      linkEl.textContent = verifyUrl.replace(/^https?:\/\//, '');
-      linkEl.hidden = false;
-    }
   }
 
   function fetchOrder() {
