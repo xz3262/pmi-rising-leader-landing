@@ -1,5 +1,5 @@
-const { insertNominee } = require('./lib/db');
-const { parseBody, json, requestMeta } = require('./lib/http');
+const { insertNominee } = require('../lib/db');
+const { parseBody, json, requestMeta } = require('../lib/http');
 
 function validateNominee(body) {
   var errors = [];

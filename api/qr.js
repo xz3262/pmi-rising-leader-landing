@@ -1,5 +1,5 @@
 const QRCode = require('qrcode');
-const { json } = require('./lib/http');
+const { json } = require('../lib/http');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {

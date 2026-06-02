@@ -1,4 +1,4 @@
-const { json } = require('./lib/http');
+const { json } = require('../lib/http');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -7,7 +7,7 @@ module.exports = async function handler(req, res) {
 
   var resource = String(req.query.resource || 'nominees').trim();
   if (resource === 'orders') {
-    return require('./lib/handlers/admin-orders')(req, res);
+    return require('../lib/handlers/admin-orders')(req, res);
   }
-  return require('./lib/handlers/admin-nominees')(req, res);
+  return require('../lib/handlers/admin-nominees')(req, res);
 };

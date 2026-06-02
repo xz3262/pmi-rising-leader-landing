@@ -1,5 +1,5 @@
-const { verifySign, env, queryZpayOrder } = require('./lib/zpay');
-const { getOrder, markOrderPaid, recordNotifyReceived } = require('./lib/db');
+const { verifySign, env, queryZpayOrder } = require('../lib/zpay');
+const { getOrder, markOrderPaid, recordNotifyReceived } = require('../lib/db');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') {

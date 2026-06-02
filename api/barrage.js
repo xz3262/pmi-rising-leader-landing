@@ -1,5 +1,5 @@
-const { insertBarrageMessage } = require('./lib/db');
-const { parseBody, json, requestMeta } = require('./lib/http');
+const { insertBarrageMessage } = require('../lib/db');
+const { parseBody, json, requestMeta } = require('../lib/http');
 
 function validateBarrage(body) {
   var errors = [];

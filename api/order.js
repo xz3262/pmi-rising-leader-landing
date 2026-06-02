@@ -2,9 +2,9 @@ const {
   signParams,
   buildSubmitUrl,
   env
-} = require('./lib/zpay');
-const { insertOrder, markOrderPaid } = require('./lib/db');
-const { parseBody, json, requestMeta } = require('./lib/http');
+} = require('../lib/zpay');
+const { insertOrder, markOrderPaid } = require('../lib/db');
+const { parseBody, json, requestMeta } = require('../lib/http');
 
 var TICKETS = {
   standard: { price: 399, name: 'Standard Ticket' },
