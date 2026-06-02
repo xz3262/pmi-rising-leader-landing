@@ -705,6 +705,34 @@ body::before {
 .verify__k { font-size: 12px; color: #9485ad; font-weight: 600; padding-top: 2px; }
 .verify__v { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.5; word-break: break-word; }
 .verify__v--mono { font-size: 13px; font-weight: 500; letter-spacing: .02em; color: var(--text-soft); }
+.verify__history {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.verify__history-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.verify__history-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.verify__history-count { font-size: 12px; color: #9485ad; font-weight: 600; }
+.verify__history-list {
+  margin: 0;
+  padding: 0 0 0 1.25rem;
+  display: grid;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.verify__history-list li {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
 .verify__note { margin-top: 18px; font-size: 13px; color: var(--text-muted); line-height: 1.6; }
 
 /* =========================================================

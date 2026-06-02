@@ -42,13 +42,17 @@
             <div class="verify__v" id="vTicket">——</div>
           </div>
           <div class="verify__row">
-            <div class="verify__k">订单号</div>
-            <div class="verify__v verify__v--mono" id="vOrder">——</div>
+            <div class="verify__k">下单时间</div>
+            <div class="verify__v" id="vOrderedAt">——</div>
           </div>
-          <div class="verify__row verify__row--full">
-            <div class="verify__k">活动</div>
-            <div class="verify__v">2026年6月27日 · 苏州园区香格里拉大酒店</div>
+        </div>
+
+        <div class="verify__history" id="verifyHistory" hidden>
+          <div class="verify__history-head">
+            <div class="verify__history-title">验票记录</div>
+            <div class="verify__history-count" id="vVerifyCount">累计验票 0 次</div>
           </div>
+          <ol class="verify__history-list" id="vVerifyList"></ol>
         </div>
       </div>
 

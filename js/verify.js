@@ -17,10 +17,45 @@
   var cardEl = document.getElementById('verifyCard');
   var noteEl = document.getElementById('verifyNote');
   var badgeEl = document.getElementById('verifyBadge');
+  var historyEl = document.getElementById('verifyHistory');
+  var historyCountEl = document.getElementById('vVerifyCount');
+  var historyListEl = document.getElementById('vVerifyList');
 
   function setText(id, txt) {
     var el = document.getElementById(id);
     if (el) el.textContent = txt;
+  }
+
+  function formatDateTime(value) {
+    if (!value) return '——';
+    var raw = String(value).trim();
+    var match = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+    if (!match) return raw;
+    var datePart = parseInt(match[1], 10) + '年' + parseInt(match[2], 10) + '月' + parseInt(match[3], 10) + '日';
+    if (match[4] == null) return datePart;
+    var timePart = match[4] + ':' + match[5];
+    if (match[6] != null) timePart += ':' + match[6];
+    return datePart + ' ' + timePart;
+  }
+
+  function renderVerificationHistory(count, times) {
+    if (!historyEl || !historyCountEl || !historyListEl) return;
+
+    var total = Number(count) || (times && times.length) || 0;
+    historyCountEl.textContent = '累计验票 ' + total + ' 次';
+    historyListEl.innerHTML = '';
+
+    if (!times || !times.length) {
+      historyEl.hidden = true;
+      return;
+    }
+
+    times.forEach(function (at, index) {
+      var li = document.createElement('li');
+      li.textContent = '第 ' + (index + 1) + ' 次 · ' + formatDateTime(at);
+      historyListEl.appendChild(li);
+    });
+    historyEl.hidden = false;
   }
 
   function showInvalid(title, sub) {
@@ -28,6 +63,7 @@
     if (subEl) subEl.textContent = sub;
     if (cardEl) cardEl.hidden = true;
     if (noteEl) noteEl.hidden = true;
+    if (historyEl) historyEl.hidden = true;
   }
 
   function showValid(order) {
@@ -45,7 +81,8 @@
     setText('vTitle', order.title || '——');
     setText('vIndustry', order.industry || '——');
     setText('vTicket', order.ticketName || '——');
-    setText('vOrder', order.merchantOrderNo || order.orderId || orderId);
+    setText('vOrderedAt', formatDateTime(order.orderedAt));
+    renderVerificationHistory(order.verifyCount, order.verifications);
   }
 
   function showUnpaid() {
@@ -53,6 +90,7 @@
     if (subEl) subEl.textContent = '该订单尚未完成支付，无法验票';
     if (cardEl) cardEl.hidden = true;
     if (noteEl) noteEl.hidden = true;
+    if (historyEl) historyEl.hidden = true;
     if (badgeEl) {
       badgeEl.textContent = '未支付';
       badgeEl.className = 'verify__badge verify__badge--bad';
@@ -64,10 +102,11 @@
       name: '张三（预览）',
       company: '示例科技有限公司',
       title: '项目总监',
-      industry: '科技互联网',
-      ticketName: 'VIP Ticket',
-      merchantOrderNo: orderId || 'RL2026PREVIEW0001',
-      orderId: orderId || 'RL2026PREVIEW0001'
+      industry: '科技 / 互联网',
+      ticketName: 'Invitation Ticket',
+      orderedAt: '2026-06-02 10:15:00',
+      verifyCount: 2,
+      verifications: ['2026-06-02 10:20:00', '2026-06-02 11:34:32']
     });
     return;
   }
@@ -77,7 +116,7 @@
     return;
   }
 
-  fetch('/api/order-status?out_trade_no=' + encodeURIComponent(orderId))
+  fetch('/api/verify?order=' + encodeURIComponent(orderId))
     .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
     .then(function (res) {
       if (!res.ok) {

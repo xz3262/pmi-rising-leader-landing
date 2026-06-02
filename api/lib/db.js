@@ -149,6 +149,20 @@ async function ensureSchema() {
     )
   `);
 
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS ticket_verifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      merchant_order_no TEXT NOT NULL,
+      client_ip TEXT,
+      user_agent TEXT,
+      scanned_at TEXT NOT NULL DEFAULT (${BEIJING_NOW})
+    )
+  `);
+  await db.execute(`
+    CREATE INDEX IF NOT EXISTS idx_ticket_verifications_order
+    ON ticket_verifications (merchant_order_no, scanned_at)
+  `);
+
   ready = true;
 }
 
@@ -267,6 +281,39 @@ async function insertNominee(data) {
   return Number(result.lastInsertRowid || 0);
 }
 
+async function recordTicketVerification(merchantOrderNo, meta) {
+  await ensureSchema();
+  var db = getClient();
+  await db.execute({
+    sql: `
+      INSERT INTO ticket_verifications (merchant_order_no, client_ip, user_agent)
+      VALUES (?, ?, ?)
+    `,
+    args: [
+      merchantOrderNo,
+      meta && meta.clientIp ? meta.clientIp : '',
+      meta && meta.userAgent ? meta.userAgent : ''
+    ]
+  });
+}
+
+async function listTicketVerifications(merchantOrderNo) {
+  await ensureSchema();
+  var db = getClient();
+  var result = await db.execute({
+    sql: `
+      SELECT scanned_at
+      FROM ticket_verifications
+      WHERE merchant_order_no = ?
+      ORDER BY scanned_at ASC, id ASC
+    `,
+    args: [merchantOrderNo]
+  });
+  return result.rows.map(function (row) {
+    return String(row.scanned_at || '');
+  });
+}
+
 async function insertBarrageMessage(data) {
   await ensureSchema();
   var db = getClient();
@@ -291,6 +338,8 @@ module.exports = {
   markOrderPaid,
   recordNotifyReceived,
   getOrder,
+  recordTicketVerification,
+  listTicketVerifications,
   insertNominee,
   insertBarrageMessage
 };
