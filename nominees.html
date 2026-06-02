@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#120c24" />
+  <link rel="icon" href="/assets/favicon-pmi.png" type="image/png" />
+  <title>Nominee 资料 · 只读</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <main class="nom-admin-page">
+    <div class="nom-admin">
+      <div class="nom-admin__brand">PMI RISING LEADER 2026</div>
+      <h1 class="nom-admin__title">Nominee 资料</h1>
+      <p class="nom-admin__sub">只读查看，不可修改或删除</p>
+
+      <form class="nom-admin__gate" id="nomAdminGate" hidden>
+        <label class="nom-admin__gate-label" for="nomAdminKey">访问密钥</label>
+        <input class="nom-admin__gate-input" id="nomAdminKey" type="password" autocomplete="off" placeholder="请输入密钥" />
+        <button class="btn btn--lg btn--gradient btn--block" type="submit">进入</button>
+        <p class="nom-admin__gate-hint" id="nomAdminGateHint" hidden></p>
+      </form>
+
+      <p class="nom-admin__status" id="nomAdminStatus">加载中…</p>
+
+      <div class="nom-admin__list" id="nomAdminList" hidden></div>
+    </div>
+  </main>
+
+  <div class="nom-admin-detail" id="nomAdminDetail" hidden>
+    <div class="nom-admin-detail__mask" data-nom-admin-close></div>
+    <div class="nom-admin-detail__panel" role="dialog" aria-modal="true" aria-labelledby="nomAdminDetailTitle">
+      <button class="modal__x" type="button" aria-label="关闭" data-nom-admin-close>&times;</button>
+      <h2 class="nom-admin-detail__title" id="nomAdminDetailTitle">Nominee 详情</h2>
+      <div class="nom-admin-detail__photo" id="nomAdminDetailPhoto" hidden>
+        <img id="nomAdminDetailImg" alt="Nominee 照片" />
+      </div>
+      <div class="nom-admin-detail__rows" id="nomAdminDetailRows"></div>
+    </div>
+  </div>
+
+  <script src="/js/nominees-admin.js"></script>
+</body>
+</html>
