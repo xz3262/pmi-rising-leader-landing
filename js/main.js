@@ -310,6 +310,222 @@
   }
 
   /* =========================================================
+     9. 弹窗基础（共用）
+     ========================================================= */
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function openModal(modal) {
+    if (!modal) return;
+    modal.hidden = false;
+    document.body.classList.add('modal-open');
+  }
+  function closeModal(modal) {
+    if (!modal) return;
+    modal.hidden = true;
+    if (!document.querySelector('.modal:not([hidden])')) {
+      document.body.classList.remove('modal-open');
+    }
+  }
+  function initModals() {
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        var open = document.querySelector('.modal:not([hidden])');
+        if (open) closeModal(open);
+      }
+    });
+  }
+
+  /* =========================================================
+     10. 第六屏 弹幕墙（一段话，诠释项目管理人生）
+     ========================================================= */
+  var BARRAGE_SEED = [
+    { txt: '项目管理，是把不确定一点点变成确定。', who: '十年 PM' },
+    { txt: '计划赶不上变化，但计划让你在变化里不慌。', who: '交付总监' },
+    { txt: '进度、成本、质量，我们一直在三角里找平衡。' },
+    { txt: '真正的里程碑，是团队一起扛过来的那些夜晚。', who: '研发负责人' },
+    { txt: '沟通解决八成的问题，剩下两成靠复盘。', who: '产品经理' },
+    { txt: '风险不会消失，只会留给没准备的人。' },
+    { txt: '把复杂的事拆简单，是项目经理的浪漫。', who: '战略总监' },
+    { txt: '交付的不只是项目，更是彼此的信任。' },
+    { txt: '管理项目，先管理好自己的预期。', who: '运营总监' },
+    { txt: '让对的人，在对的时间，做对的事。' },
+    { txt: '复盘不是追责，是让下一次做得更好。', who: '技术 VP' },
+    { txt: '项目结束那天，最舍不得的是这群人。' }
+  ];
+  var ROW_COUNT = 3;
+  var barrageRows = [];
+
+  function bubbleHTML(item, idx) {
+    var cls = 'bubble bubble--t' + (idx % 4) + (item.mine ? ' bubble--mine' : '');
+    return '<span class="' + cls + '">' +
+      '<span class="bubble__txt">' + escHtml(item.txt) + '</span>' +
+      (item.who ? '<span class="bubble__who">' + escHtml(item.who) + '</span>' : '') +
+      '</span>';
+  }
+  function renderRow(row, items) {
+    var inner = items.map(bubbleHTML).join('');
+    row.innerHTML =
+      '<div class="barrage__group">' + inner + '</div>' +
+      '<div class="barrage__group" aria-hidden="true">' + inner + '</div>';
+  }
+  function shortestRow() {
+    var ri = 0, min = Infinity;
+    for (var i = 0; i < barrageRows.length; i++) {
+      if (barrageRows[i].length < min) { min = barrageRows[i].length; ri = i; }
+    }
+    return ri;
+  }
+  function updateBarrageCount() {
+    var n = 0;
+    barrageRows.forEach(function (r) { n += r.length; });
+    var el = document.getElementById('barrageCount');
+    if (el) el.textContent = n;
+  }
+  function loadMyBarrage() {
+    try { return JSON.parse(localStorage.getItem('pmi_barrage') || '[]'); } catch (e) { return []; }
+  }
+  function persistMyBarrage() {
+    try {
+      var mine = [];
+      barrageRows.forEach(function (items) {
+        items.forEach(function (it) { if (it.mine) mine.push(it.txt); });
+      });
+      localStorage.setItem('pmi_barrage', JSON.stringify(mine.slice(0, 50)));
+    } catch (e) {}
+  }
+  function addBarrage(txt) {
+    var ri = shortestRow();
+    barrageRows[ri].unshift({ txt: txt, who: '我', mine: true });
+    var row = document.querySelector('.barrage__row[data-row="' + ri + '"]');
+    if (row) renderRow(row, barrageRows[ri]);
+    persistMyBarrage();
+    updateBarrageCount();
+  }
+  function buildBarrage() {
+    var stage = document.getElementById('barrageStage');
+    if (!stage) return;
+    var r;
+    for (r = 0; r < ROW_COUNT; r++) barrageRows.push([]);
+    BARRAGE_SEED.forEach(function (item, i) { barrageRows[i % ROW_COUNT].push(item); });
+    // 回填本机已发送内容
+    loadMyBarrage().forEach(function (txt) {
+      barrageRows[shortestRow()].unshift({ txt: txt, who: '我', mine: true });
+    });
+    var mods = ['', 'barrage__row--rev barrage__row--slow', 'barrage__row--fast'];
+    for (r = 0; r < ROW_COUNT; r++) {
+      var row = document.createElement('div');
+      row.className = 'barrage__row ' + mods[r];
+      row.setAttribute('data-row', r);
+      renderRow(row, barrageRows[r]);
+      stage.appendChild(row);
+    }
+    updateBarrageCount();
+  }
+  function initBarrage() {
+    buildBarrage();
+    var form = document.getElementById('barrageForm');
+    var input = document.getElementById('barrageInput');
+    var modal = document.getElementById('sendModal');
+    if (!form || !input || !modal) return;
+    var preview = document.getElementById('sendPreview');
+    var agree = document.getElementById('sendAgree');
+    var confirmBtn = document.getElementById('sendConfirm');
+    var pending = '';
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var v = (input.value || '').trim();
+      if (!v) { input.focus(); return; }
+      pending = v;
+      if (preview) preview.textContent = '“' + v + '”';
+      if (agree) agree.checked = false;
+      if (confirmBtn) confirmBtn.disabled = true;
+      openModal(modal);
+    });
+    if (agree && confirmBtn) {
+      agree.addEventListener('change', function () { confirmBtn.disabled = !agree.checked; });
+    }
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', function () {
+        if ((agree && !agree.checked) || !pending) return;
+        addBarrage(pending);
+        pending = '';
+        input.value = '';
+        closeModal(modal);
+      });
+    }
+    modal.querySelectorAll('[data-send-close]').forEach(function (el) {
+      el.addEventListener('click', function () { closeModal(modal); });
+    });
+  }
+
+  /* =========================================================
+     11. 第五屏 Nominee 获奖流程（多步弹窗）
+     ========================================================= */
+  function initNominee() {
+    var modal = document.getElementById('nomineeModal');
+    if (!modal) return;
+    var steps = modal.querySelectorAll('.nstep');
+    var dots = modal.querySelectorAll('.nominee__dots span');
+    var panel = modal.querySelector('.modal__panel');
+    var current = 1;
+
+    function show(step) {
+      current = step;
+      steps.forEach(function (s) { s.classList.toggle('is-active', Number(s.getAttribute('data-step')) === step); });
+      dots.forEach(function (d, i) { d.classList.toggle('is-active', i === step - 1); });
+      if (panel) panel.scrollTop = 0;
+    }
+
+    document.querySelectorAll('[data-nominee-open]').forEach(function (b) {
+      b.addEventListener('click', function () { show(1); openModal(modal); });
+    });
+    modal.querySelectorAll('[data-nominee-close]').forEach(function (el) {
+      el.addEventListener('click', function () { closeModal(modal); });
+    });
+    modal.querySelectorAll('[data-nominee-next]').forEach(function (el) {
+      el.addEventListener('click', function () { show(current + 1); });
+    });
+
+    // 个人照片预览
+    var photo = document.getElementById('n-photo');
+    var preview = document.getElementById('photoPreview');
+    if (photo && preview) {
+      photo.addEventListener('change', function () {
+        var f = photo.files && photo.files[0];
+        if (!f) return;
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+          preview.innerHTML = '<img src="' + ev.target.result + '" alt="个人照片预览" />';
+          var wrap = photo.closest('.photo-up');
+          if (wrap) wrap.classList.add('has-photo');
+        };
+        reader.readAsDataURL(f);
+      });
+    }
+
+    // 注册信息提交 → 感谢页
+    var nform = document.getElementById('nomineeForm');
+    if (nform) {
+      nform.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!validate(nform)) {
+          var firstErr = nform.querySelector('.is-invalid');
+          if (firstErr) firstErr.focus();
+          return;
+        }
+        show(4);
+      });
+      nform.addEventListener('input', function (e) {
+        if (e.target.classList.contains('is-invalid')) e.target.classList.remove('is-invalid');
+      });
+    }
+  }
+
+  /* =========================================================
      启动
      ========================================================= */
   function init() {
@@ -319,6 +535,9 @@
     initNav();
     initTickets();
     initForm();
+    initModals();
+    initBarrage();
+    initNominee();
     initReveal();
   }
 

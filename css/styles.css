@@ -668,6 +668,7 @@ body::before {
 /* =========================================================
    通用弹窗 Modal
    ========================================================= */
+body.modal-open { overflow: hidden; }
 .modal { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 22px; }
 .modal[hidden] { display: none; }
 .modal__mask { position: absolute; inset: 0; background: rgba(8,4,20,.78); backdrop-filter: blur(8px); animation: maskIn .25s ease both; }
