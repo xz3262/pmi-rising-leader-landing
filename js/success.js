@@ -68,12 +68,15 @@
     if (!canvas || !ticketOrderId) return;
 
     var verifyUrl = window.location.origin + '/verify.html?order=' + encodeURIComponent(ticketOrderId);
+    var displayPx = 168;
+    var dpr = Math.min(window.devicePixelRatio || 2, 3);
+    var renderPx = Math.round(displayPx * dpr);
+
     var img = document.createElement('img');
     img.className = 'qr__code';
     img.alt = '验票二维码';
-    img.width = 168;
-    img.height = 168;
-    img.src = '/api/qr?data=' + encodeURIComponent(verifyUrl);
+    img.decoding = 'sync';
+    img.src = '/api/qr?w=' + renderPx + '&data=' + encodeURIComponent(verifyUrl);
     canvas.replaceWith(img);
   }
 

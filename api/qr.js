@@ -12,10 +12,14 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    var width = parseInt(req.query.w || req.query.width || '512', 10);
+    if (!Number.isFinite(width) || width < 200) width = 512;
+    if (width > 1024) width = 1024;
+
     var png = await QRCode.toBuffer(data, {
       type: 'png',
-      width: 320,
-      margin: 1,
+      width: width,
+      margin: 2,
       errorCorrectionLevel: 'M',
       color: {
         dark: '#1a1033',
