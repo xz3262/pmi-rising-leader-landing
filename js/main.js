@@ -16,9 +16,9 @@
   ];
   var SURNAMES = ['李','王','张','刘','陈','杨','赵','黄','周','吴','徐','孙','马','朱','胡','林','何','高','罗','郑','梁','谢','宋','唐','许','韩','冯','邓','曹','彭'];
   var ROLES = ['项目总监','研发负责人','产品总监','运营总监','技术VP','创新负责人','交付总监','战略总监'];
-  // Hero 海报墙：PMI logo 与 Rising 100 海报，交替铺在品牌渐变卡片上
+  // Hero 海报墙：白色 Rising 100 logo 与留白瓦片交替，无卡片直接滚动
   var HERO_WALL_MARKS = [
-    { img: 'assets/logo-pmi.png',             kind: 'logo',   label: 'PMI' },
+    { img: 'assets/hero-wall-blank.png',      kind: 'blank',  label: '' },
     { img: 'assets/hero-wall-rising-100.png', kind: 'rising', label: 'Rising 100' }
   ];
 
@@ -32,15 +32,15 @@
     var wall = document.getElementById('posterWall');
     if (!wall) return;
 
-    var COLS = 6;
-    var PER_COL = 9;            // 每列 9 张，6 列 ≈ 54 张可见，循环铺满
+    var COLS = 9;
+    var PER_COL = 13;           // 列更多、每列更密，铺满更紧凑的小 logo 阵列
     var variants = ['up', 'down', 'up', 'down', 'up', 'down'];
     var speeds = ['', 'slow', 'fast', '', 'slow', 'fast'];
     var counter = 0;
 
     for (var c = 0; c < COLS; c++) {
       var col = document.createElement('div');
-      col.className = 'poster-col poster-col--' + variants[c] + (speeds[c] ? ' poster-col--' + speeds[c] : '');
+      col.className = 'poster-col poster-col--' + pick(variants, c) + (pick(speeds, c) ? ' poster-col--' + pick(speeds, c) : '');
 
       // 生成一组，再复制一份以实现无缝循环
       var group = document.createDocumentFragment();
@@ -55,10 +55,9 @@
   }
 
   function makePoster(n) {
-    var mark = pick(HERO_WALL_MARKS, n);          // 按序号交替 logo / Rising 100
+    var mark = pick(HERO_WALL_MARKS, n);          // 按序号交替留白 / Rising 100
     var el = document.createElement('div');
-    el.className = 'poster poster--brand';
-    el.style.backgroundImage = pick(GRADIENTS, n); // 品牌渐变底，循环上色
+    el.className = 'poster';
     var face = document.createElement('span');
     face.className = 'poster__mark poster__mark--' + mark.kind;
     face.style.backgroundImage = "url('" + assetUrl(mark.img) + "')";
@@ -373,7 +372,7 @@
         });
         try { sessionStorage.setItem('pmi_registration', JSON.stringify(order)); } catch (err) {}
         window.location.href = res.body.returnUrl ||
-          ('success.html?out_trade_no=' + encodeURIComponent(res.body.orderId));
+          ('/success?out_trade_no=' + encodeURIComponent(res.body.orderId));
       })
       .catch(function (err) {
         if (overlay) overlay.hidden = true;

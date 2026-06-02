@@ -120,12 +120,12 @@ module.exports = async function handler(req, res) {
       payMethodLabel: PAY_LABELS.free,
       ticketName: ticketName,
       price: price,
-      returnUrl: '/success.html?out_trade_no=' + encodeURIComponent(outTradeNo)
+      returnUrl: '/success?out_trade_no=' + encodeURIComponent(outTradeNo)
     });
   }
 
   var notifyUrl = siteUrl + '/api/notify';
-  var returnUrl = siteUrl + '/success.html';
+  var returnUrl = siteUrl + '/success';
 
   var submitParams = {
     pid: pid,
