@@ -20,6 +20,12 @@ function isFreeInvite(code) {
   return FREE_INVITE_CODES.indexOf(String(code || '').trim().toUpperCase()) !== -1;
 }
 
+// 测试票：仅邀请码 TEST 可购买（大小写不敏感）
+var TEST_INVITE_CODE = 'TEST';
+function isTestInvite(code) {
+  return String(code || '').trim().toUpperCase() === TEST_INVITE_CODE;
+}
+
 function generateOrderId() {
   var suffix = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
   return ('RL2026' + Date.now() + suffix).slice(0, 32);
@@ -36,6 +42,8 @@ function validateBody(body) {
   if (!TICKETS[body.ticket]) errors.push('请选择票种');
   if (body.ticket === 'free') {
     if (!isFreeInvite(body.invite)) errors.push('邀请码无效');
+  } else if (body.ticket === 'test') {
+    if (!isTestInvite(body.invite)) errors.push('测试票需使用邀请码 TEST');
   } else if (body.payMethod !== 'wxpay' && body.payMethod !== 'alipay') {
     errors.push('请选择支付方式');
   }

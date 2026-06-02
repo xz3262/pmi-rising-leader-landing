@@ -169,6 +169,12 @@
     return FREE_INVITE_CODES.indexOf(String(code || '').trim().toUpperCase()) !== -1;
   }
 
+  // 测试票：仅邀请码 TEST 可解锁（大小写不敏感）
+  var TEST_INVITE_CODE = 'TEST';
+  function isTestInvite(code) {
+    return String(code || '').trim().toUpperCase() === TEST_INVITE_CODE;
+  }
+
   function initTickets() {
     var form = document.getElementById('regForm');
     if (!form) return;
@@ -178,10 +184,12 @@
     var inviteBtn = document.getElementById('inviteBtn');
     var inviteMsg = document.getElementById('inviteMsg');
     var freeTicket = document.getElementById('ticketFree');
+    var testTicket = document.getElementById('ticketTest');
     var payWrap = document.getElementById('payWrap');
     var freeClaim = document.getElementById('freeClaim');
     var freeCodeLabel = document.getElementById('freeCodeLabel');
     var inviteOk = false;
+    var inviteTestOk = false;
 
     function selectedVal() {
       var v = form.querySelector('input[name="ticket"]:checked');
@@ -209,6 +217,7 @@
     }
 
     var freeRadio = freeTicket ? freeTicket.querySelector('input[name="ticket"]') : null;
+    var testRadio = testTicket ? testTicket.querySelector('input[name="ticket"]') : null;
 
     // 收起免费票（邀请码未确认 / 被改动时）
     function lockFree() {
@@ -219,11 +228,26 @@
       syncMode();
     }
 
-    // 点击「确认」才校验邀请码并解锁免费票
+    // 收起测试票
+    function lockTest() {
+      inviteTestOk = false;
+      if (testTicket) testTicket.hidden = true;
+      if (testRadio) testRadio.disabled = true;
+      if (selectedVal() === 'test') selectTicket('standard');
+      syncMode();
+    }
+
+    function lockInvites() {
+      lockFree();
+      lockTest();
+    }
+
+    // 点击「确认」才校验邀请码并解锁对应票种
     function confirmInvite() {
       var code = inviteEl ? inviteEl.value.trim() : '';
-      if (!code) { lockFree(); setInviteMsg('请输入邀请码', 'err'); return; }
+      if (!code) { lockInvites(); setInviteMsg('请输入邀请码', 'err'); return; }
       if (isFreeInvite(code)) {
+        lockTest();
         inviteOk = true;
         if (freeCodeLabel) freeCodeLabel.textContent = code.toUpperCase();
         if (freeTicket) freeTicket.hidden = false;
@@ -231,8 +255,16 @@
         selectTicket('free');
         setInviteMsg('邀请码有效，已为你解锁免费票', 'ok');
         syncMode();
-      } else {
+      } else if (isTestInvite(code)) {
         lockFree();
+        inviteTestOk = true;
+        if (testTicket) testTicket.hidden = false;
+        if (testRadio) testRadio.disabled = false;
+        selectTicket('test');
+        setInviteMsg('邀请码有效，已为你解锁测试票', 'ok');
+        syncMode();
+      } else {
+        lockInvites();
         setInviteMsg('邀请码无效，请确认后重试', 'err');
       }
     }
@@ -242,14 +274,14 @@
     if (inviteEl) {
       // 确认后再修改邀请码，需重新确认
       inviteEl.addEventListener('input', function () {
-        if (inviteOk) lockFree();
+        if (inviteOk || inviteTestOk) lockInvites();
         setInviteMsg('', null);
       });
       inviteEl.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') { e.preventDefault(); confirmInvite(); }
       });
     }
-    lockFree();
+    lockInvites();
     syncMode();
   }
 

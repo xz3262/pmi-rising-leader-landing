@@ -264,8 +264,9 @@
               </div>
             </label>
 
-            <label class="ticket ticket--test" data-ticket="test">
-              <input type="radio" name="ticket" value="test" />
+            <!-- 测试票：邀请码填 TEST 并确认后才显示 -->
+            <label class="ticket ticket--test" data-ticket="test" id="ticketTest" hidden>
+              <input type="radio" name="ticket" value="test" disabled />
               <span class="ticket__tag">测试</span>
               <div class="ticket__body">
                 <div class="ticket__head">
