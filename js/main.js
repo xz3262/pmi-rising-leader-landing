@@ -171,50 +171,62 @@
     update();
   }
 
+  var PAY_LABELS = { wxpay: '微信支付', alipay: '支付宝' };
+
   /* =========================================================
-     6. 表单校验 + 支付占位跳转
+     6. 表单校验 + 支付占位跳转（微信 / 支付宝）
      ========================================================= */
   function initForm() {
     var form = document.getElementById('regForm');
     if (!form) return;
     var overlay = document.getElementById('payOverlay');
     var overlayDetail = document.getElementById('payOverlayDetail');
+    var payBtns = form.querySelectorAll('[data-pay]');
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      if (!validate(form)) {
-        var firstErr = form.querySelector('.is-invalid');
-        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
-      }
-
-      var data = collect(form);
-
-      // 写入 sessionStorage，供成功页读取（占位：真实场景应由后端返回订单号）
-      try { sessionStorage.setItem('pmi_registration', JSON.stringify(data)); } catch (err) {}
-
-      // === 支付占位 ===
-      // TODO: 真实接入时，此处应 POST 报名信息到后端，换取微信/支付宝支付链接后跳转。
-      //   fetch('/api/order', { method:'POST', body: JSON.stringify(data) })
-      //     .then(r => r.json()).then(o => location.href = o.payUrl)
-      if (overlay) {
-        overlay.hidden = false;
-        if (overlayDetail) overlayDetail.textContent = data.ticketName + ' · ¥' + data.price;
-      }
-
-      // 模拟支付完成后回跳成功页
-      window.setTimeout(function () {
-        // 占位短信：报名 + 支付成功确认（详见 sendSms 注释）
-        sendSms(data, 'confirm');
-        window.location.href = 'success.html';
-      }, 1800);
+    payBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        startPay(form, btn.getAttribute('data-pay'), overlay, overlayDetail);
+      });
     });
+
+    // 阻止回车误提交（须点击支付方式按钮）
+    form.addEventListener('submit', function (e) { e.preventDefault(); });
 
     // 实时清除错误态
     form.addEventListener('input', function (e) {
       if (e.target.classList.contains('is-invalid')) e.target.classList.remove('is-invalid');
     });
+  }
+
+  function startPay(form, payMethod, overlay, overlayDetail) {
+    if (payMethod !== 'wxpay' && payMethod !== 'alipay') return;
+
+    if (!validate(form)) {
+      var firstErr = form.querySelector('.is-invalid');
+      if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    var data = collect(form, payMethod);
+
+    try { sessionStorage.setItem('pmi_registration', JSON.stringify(data)); } catch (err) {}
+
+    // === 支付占位 ===
+    // TODO: 真实接入 ZPAY 时 POST 到后端，body 含 type: data.payMethod（wxpay / alipay）
+    //   fetch('/api/order', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) })
+    //     .then(function (r) { return r.json(); })
+    //     .then(function (o) { if (o.payUrl) location.href = o.payUrl; })
+    if (overlay) {
+      overlay.hidden = false;
+      if (overlayDetail) {
+        overlayDetail.textContent = data.payMethodLabel + ' · ' + data.ticketName + ' · ¥' + data.price;
+      }
+    }
+
+    window.setTimeout(function () {
+      sendSms(data, 'confirm');
+      window.location.href = 'success.html';
+    }, 1800);
   }
 
   function validate(form) {
@@ -231,9 +243,10 @@
     return ok;
   }
 
-  function collect(form) {
+  function collect(form, payMethod) {
     var t = form.querySelector('input[name="ticket"]:checked');
     var ticket = t ? t.value : 'standard';
+    var method = payMethod === 'alipay' ? 'alipay' : 'wxpay';
     return {
       name: form.name.value.trim(),
       company: form.company.value.trim(),
@@ -246,7 +259,8 @@
       ticket: ticket,
       ticketName: ticket === 'vip' ? 'VIP Ticket' : 'Standard Ticket',
       price: PRICES[ticket],
-      // 占位订单号（真实场景由后端生成）
+      payMethod: method,
+      payMethodLabel: PAY_LABELS[method],
       orderId: 'RL2026-' + String(((form.phone.value || '00000000000').slice(-6)) + Math.floor(Date.now() % 10000)).padStart(10, '0')
     };
   }
@@ -259,14 +273,16 @@
   function sendSms(data, type) {
     var templates = {
       // 报名 + 支付成功后立即发送
-      confirm: '【PMI Rising Leader】' + data.name + '，您已成功报名 2026 中国新锐项目管理精英大会（' + data.ticketName + '）。订单号 ' + data.orderId + '。6月27日苏州园区香格里拉大酒店见，凭成功页二维码现场验票。',
+      confirm: '【PMI Rising Leader】' + data.name + '，您已通过' + (data.payMethodLabel || '在线支付') + '成功报名 2026 中国新锐项目管理精英大会（' + data.ticketName + '）。订单号 ' + data.orderId + '。6月27日苏州园区香格里拉大酒店见，凭成功页二维码现场验票。',
       // 活动前 3 天发送
       remindD3: '【PMI Rising Leader】' + data.name + '，大会将于 3 天后（6月27日）在苏州园区香格里拉大酒店举行。请提前规划行程，详见行前须知。',
       // 活动前 1 天发送
       remindD1: '【PMI Rising Leader】' + data.name + '，大会明日开启（6月27日 13:00 起）。请携带本人二维码准时签到，期待与您在苏州相见。'
     };
     // 占位：仅打印，真实场景改为后端定时任务 + 短信网关
-    console.log('[SMS 占位] ' + (templates[type] || templates.confirm));
+    if (typeof console !== 'undefined' && console.debug) {
+      console.debug('[SMS] ' + (templates[type] || templates.confirm));
+    }
     return templates[type] || templates.confirm;
   }
   // 暴露给成功页/调试使用

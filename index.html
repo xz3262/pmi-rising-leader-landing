@@ -247,10 +247,18 @@
                 <span>合计</span>
                 <b id="totalPrice">¥399</b>
               </div>
-              <button type="submit" class="btn btn--lg btn--gradient btn--block" id="payBtn">
-                立即支付
-              </button>
-              <p class="reg__note">点击支付将跳转至国内支付页面（微信 / 支付宝）。价格根据最终方案调整。</p>
+              <p class="reg__pay-label">选择支付方式</p>
+              <div class="reg__pay" role="group" aria-label="支付方式">
+                <button type="button" class="btn btn--lg btn--block btn--pay btn--pay-wx" data-pay="wxpay" id="payWx">
+                  <img class="btn__icon" src="assets/wechat.png" alt="" width="28" height="28" decoding="async" />
+                  微信支付
+                </button>
+                <button type="button" class="btn btn--lg btn--block btn--pay btn--pay-ali" data-pay="alipay" id="payAli">
+                  <img class="btn__icon" src="assets/alipay.png" alt="" width="28" height="28" decoding="async" />
+                  支付宝
+                </button>
+              </div>
+              <p class="reg__note">请选择支付方式，将跳转至对应收银台完成付款。</p>
             </div>
           </div>
         </div>
@@ -270,12 +278,12 @@
       </div>
       <div class="footer__meta">
         <span>2026.06.27 · 苏州园区香格里拉大酒店</span>
-        <span>© 2026 PMI Rising Leader. 占位页面。</span>
+        <span>© 2026 PMI Rising Leader</span>
       </div>
     </div>
   </footer>
 
-  <!-- 支付跳转占位遮罩 -->
+  <!-- 支付跳转遮罩 -->
   <div class="pay-overlay" id="payOverlay" hidden>
     <div class="pay-overlay__card">
       <div class="spinner" aria-hidden="true"></div>

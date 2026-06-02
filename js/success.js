@@ -15,6 +15,7 @@
   setText('etType', data.ticketName || 'Standard Ticket');
   setText('etName', data.name || '——');
   setText('etCompany', data.company || '——');
+  setText('etPay', data.payMethodLabel || '——');
   setText('qrOrder', '订单号 ' + orderId);
 
   // 生成占位二维码（确定性图案，含三个定位角，外观接近真实二维码）
