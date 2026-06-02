@@ -53,6 +53,8 @@ module.exports = async function handler(req, res) {
       notifyReceived: Boolean(order.notify_at),
       name: order.name,
       company: order.company,
+      title: order.title,
+      industry: order.industry,
       ticketName: order.ticket_name,
       payMethod: order.pay_method,
       payMethodLabel: PAY_LABELS[order.pay_method] || order.pay_method,

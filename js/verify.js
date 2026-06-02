@@ -42,6 +42,8 @@
 
     setText('vName', order.name || '——');
     setText('vCompany', order.company || '——');
+    setText('vTitle', order.title || '——');
+    setText('vIndustry', order.industry || '——');
     setText('vTicket', order.ticketName || '——');
     setText('vOrder', order.merchantOrderNo || order.orderId || orderId);
   }
@@ -61,6 +63,8 @@
     showValid({
       name: '张三（预览）',
       company: '示例科技有限公司',
+      title: '项目总监',
+      industry: '科技互联网',
       ticketName: 'VIP Ticket',
       merchantOrderNo: orderId || 'RL2026PREVIEW0001',
       orderId: orderId || 'RL2026PREVIEW0001'
