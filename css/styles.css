@@ -219,58 +219,32 @@ body::before {
 /* 海报墙 */
 .hero__wall {
   position: absolute; inset: -8% -2% -8% -2%; z-index: 0;
-  display: flex; gap: 16px; justify-content: center;
+  display: flex; gap: 10px; justify-content: center;
   transform: rotate(-6deg) scale(1.18);
   opacity: .9;
 }
-.poster-col { display: flex; flex-direction: column; gap: 16px; flex: 0 0 auto; width: 150px; }
+.poster-col { display: flex; flex-direction: column; gap: 10px; flex: 0 0 auto; width: 96px; }
 .poster-col--up   { animation: scrollUp   38s linear infinite; }
 .poster-col--down { animation: scrollDown 38s linear infinite; }
 .poster-col--slow { animation-duration: 52s; }
 .poster-col--fast { animation-duration: 30s; }
 
+/* 透明瓦片：无卡片，仅承载居中的白色 logo */
 .poster {
   position: relative;
   flex: 0 0 auto;
-  aspect-ratio: 3 / 4;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,.08);
-  box-shadow: 0 10px 30px -12px rgba(0,0,0,.6);
-  display: flex; flex-direction: column; justify-content: flex-end;
-  padding: 12px;
+  aspect-ratio: 1 / 1;
 }
-/* 品牌卡片：渐变底 + 居中白色标记（PMI logo / Rising 100 交替铺排） */
-.poster--brand {
-  padding: 0;
-  background-size: cover;
-  background-position: center;
-}
+/* 白色标记（留白瓦片 / Rising 100 交替铺排），尺寸偏小 */
 .poster__mark {
   position: absolute; inset: 0; z-index: 2;
   background-position: center;
   background-repeat: no-repeat;
-  background-size: 70%;
-  filter: drop-shadow(0 6px 16px rgba(0,0,0,.3));
+  background-size: 44%;
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,.3));
 }
-.poster__mark--logo   { background-size: 52%; }
-.poster__mark--rising { background-size: 80%; }
-.poster::after {
-  content: ""; position: absolute; inset: 0; z-index: 1;
-  background:
-    radial-gradient(130% 120% at 28% 18%, rgba(255,255,255,.18), transparent 52%),
-    linear-gradient(180deg, transparent 45%, rgba(10,6,24,.5) 100%);
-}
-.poster__id { position: absolute; top: 10px; left: 11px; z-index: 2; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: rgba(255,255,255,.85); }
-.poster__avatar {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-58%);
-  width: 46px; height: 46px; border-radius: 50%;
-  background: rgba(255,255,255,.22); display: grid; place-items: center;
-  font-weight: 700; font-size: 16px; color: #fff; z-index: 2;
-  border: 1.5px solid rgba(255,255,255,.4);
-}
-.poster__name { position: relative; z-index: 2; font-size: 12px; font-weight: 600; color: #fff; }
-.poster__role { position: relative; z-index: 2; font-size: 10.5px; color: rgba(255,255,255,.7); }
+.poster__mark--rising { background-size: 48%; }
+.poster__mark--blank  { background-size: 40%; }
 
 @keyframes scrollUp   { from { transform: translateY(0); }      to { transform: translateY(-50%); } }
 @keyframes scrollDown { from { transform: translateY(-50%); }   to { transform: translateY(0); } }
@@ -281,7 +255,6 @@ body::before {
   background:
     radial-gradient(72% 62% at 50% 48%, rgba(16,10,34,.4), rgba(16,10,34,.78) 75%, rgba(16,10,34,.92)),
     linear-gradient(180deg, rgba(16,10,34,.6), rgba(16,10,34,.26) 30%, rgba(16,10,34,.88));
-  backdrop-filter: blur(1px);
 }
 
 .hero__content { position: relative; z-index: 2; text-align: center; padding-block: 60px; }
@@ -585,7 +558,7 @@ body::before {
   .nav__links.is-open a::after { display: none; }
 
   .hero__wall { transform: rotate(-8deg) scale(1.5); opacity: .6; }
-  .poster-col { width: 116px; }
+  .poster-col { width: 72px; }
   .hero__stat-divider { display: none; }
   .hero__stats { gap: 28px; }
 

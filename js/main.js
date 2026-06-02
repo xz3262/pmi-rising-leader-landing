@@ -16,9 +16,9 @@
   ];
   var SURNAMES = ['李','王','张','刘','陈','杨','赵','黄','周','吴','徐','孙','马','朱','胡','林','何','高','罗','郑','梁','谢','宋','唐','许','韩','冯','邓','曹','彭'];
   var ROLES = ['项目总监','研发负责人','产品总监','运营总监','技术VP','创新负责人','交付总监','战略总监'];
-  // Hero 海报墙：白色 Rising 100 logo 与留白瓦片交替，无卡片直接滚动
+  // Hero 海报墙：白色 PMI logo 与 Rising 100 logo 交替，无卡片直接滚动
   var HERO_WALL_MARKS = [
-    { img: 'assets/hero-wall-blank.png',      kind: 'blank',  label: '' },
+    { img: 'assets/hero-wall-blank.png',      kind: 'blank',  label: 'PMI' },
     { img: 'assets/hero-wall-rising-100.png', kind: 'rising', label: 'Rising 100' }
   ];
 
