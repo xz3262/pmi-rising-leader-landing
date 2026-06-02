@@ -64,16 +64,61 @@ svg { width: 100%; height: 100%; }
 
 .container { width: 100%; max-width: var(--container); margin-inline: auto; padding-inline: 22px; }
 
-/* 背景氛围光斑（全局） */
+/* 背景氛围光斑（全局基底，弱化以衬托三半圆） */
 body::before {
   content: "";
   position: fixed; inset: 0; z-index: -2;
   background:
-    radial-gradient(60vw 50vw at 12% -8%, rgba(255, 107, 61, 0.16), transparent 60%),
-    radial-gradient(55vw 50vw at 88% 4%, rgba(77, 110, 245, 0.18), transparent 62%),
-    radial-gradient(70vw 60vw at 50% 110%, rgba(224, 53, 154, 0.14), transparent 60%),
+    radial-gradient(60vw 50vw at 12% -8%, rgba(255, 107, 61, 0.10), transparent 60%),
+    radial-gradient(55vw 50vw at 88% 4%, rgba(77, 110, 245, 0.10), transparent 62%),
+    radial-gradient(70vw 60vw at 50% 110%, rgba(224, 53, 154, 0.09), transparent 60%),
     var(--bg-darkest);
 }
+
+/* =========================================================
+   品牌三半圆背景装饰（取自主视觉：边缘探入的渐变圆）
+   ========================================================= */
+.bg-orbs {
+  position: fixed; inset: 0; z-index: -1;
+  overflow: hidden; pointer-events: none;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+/* 右上 · 珊瑚→品红 */
+.orb--pink {
+  width: clamp(340px, 44vw, 660px); aspect-ratio: 1;
+  top: -13vw; right: -8vw;
+  background: linear-gradient(150deg, #ff8a5b 0%, #ff4d8d 44%, #d12c8f 100%);
+  filter: blur(26px);
+  opacity: .6;
+}
+/* 左中 · 品红→薰衣草紫 */
+.orb--violet {
+  width: clamp(380px, 48vw, 720px); aspect-ratio: 1;
+  top: 30%; left: -22vw;
+  background: linear-gradient(120deg, #c0399a 0%, #9647c4 52%, #6b4bd6 100%);
+  filter: blur(32px);
+  opacity: .5;
+}
+/* 右下 · 薰衣草紫→蓝 */
+.orb--blue {
+  width: clamp(360px, 46vw, 700px); aspect-ratio: 1;
+  bottom: -16vw; right: 3vw;
+  background: linear-gradient(135deg, #7c4dbb 0%, #4d6ef5 56%, #3f53d8 100%);
+  filter: blur(30px);
+  opacity: .5;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .orb--pink   { animation: orbDrift1 26s ease-in-out infinite; }
+  .orb--violet { animation: orbDrift2 32s ease-in-out infinite; }
+  .orb--blue   { animation: orbDrift3 30s ease-in-out infinite; }
+}
+@keyframes orbDrift1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-26px,20px); } }
+@keyframes orbDrift2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(22px,-18px); } }
+@keyframes orbDrift3 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-18px,-22px); } }
 
 /* ---------- 通用文字渐变 ---------- */
 .gradient-text {
@@ -190,6 +235,14 @@ body::before {
   display: flex; flex-direction: column; justify-content: flex-end;
   padding: 12px;
 }
+.poster--image {
+  padding: 0;
+  background-color: #fff;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.poster--image::after { display: none; }
 .poster::after {
   content: ""; position: absolute; inset: 0;
   background: linear-gradient(180deg, transparent 35%, rgba(10,6,24,.85) 100%);

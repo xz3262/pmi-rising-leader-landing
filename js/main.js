@@ -16,8 +16,13 @@
   ];
   var SURNAMES = ['李','王','张','刘','陈','杨','赵','黄','周','吴','徐','孙','马','朱','胡','林','何','高','罗','郑','梁','谢','宋','唐','许','韩','冯','邓','曹','彭'];
   var ROLES = ['项目总监','研发负责人','产品总监','运营总监','技术VP','创新负责人','交付总监','战略总监'];
+  var HERO_WALL_POSTERS = [
+    'assets/hero-wall-rising-100.png',
+    'assets/hero-wall-blank.png'
+  ];
 
   function pick(arr, i) { return arr[i % arr.length]; }
+  function assetUrl(path) { return encodeURI(path).replace(/'/g, '%27'); }
 
   /* =========================================================
      1. Hero 海报墙（100 位 Rising Leader 占位）
@@ -49,19 +54,11 @@
   }
 
   function makePoster(n) {
-    var idx = (n * 7) % GRADIENTS.length;
     var el = document.createElement('div');
-    el.className = 'poster';
-    el.style.background = pick(GRADIENTS, idx);
-
-    var num = ('0' + (((n - 1) % 100) + 1)).slice(-2);
-    var surname = pick(SURNAMES, n * 3);
-
-    el.innerHTML =
-      '<span class="poster__id">NO.' + num + '</span>' +
-      '<span class="poster__avatar">' + surname + '</span>' +
-      '<span class="poster__name">新锐管理者 ' + surname + '××</span>' +
-      '<span class="poster__role">' + pick(ROLES, n) + '</span>';
+    el.className = 'poster poster--image';
+    el.style.backgroundImage = "url('" + assetUrl(pick(HERO_WALL_POSTERS, n)) + "')";
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', (n % 2 === 1) ? 'Rising 100' : 'PMI Rising Leader');
     return el;
   }
 
@@ -154,7 +151,11 @@
   /* =========================================================
      5. 票种选择 + 价格联动
      ========================================================= */
-  var PRICES = { standard: 399, vip: 699 };
+  var TICKETS = {
+    standard: { price: 399, name: 'Standard Ticket' },
+    vip: { price: 699, name: 'VIP Ticket' },
+    test: { price: 1, name: 'Test Ticket（支付测试）' }
+  };
 
   function initTickets() {
     var form = document.getElementById('regForm');
@@ -164,8 +165,8 @@
 
     function update() {
       var val = form.querySelector('input[name="ticket"]:checked');
-      var price = val ? PRICES[val.value] : 0;
-      if (totalEl) totalEl.textContent = '¥' + price;
+      var ticket = val && TICKETS[val.value] ? TICKETS[val.value] : TICKETS.standard;
+      if (totalEl) totalEl.textContent = '¥' + ticket.price;
     }
     radios.forEach(function (r) { r.addEventListener('change', update); });
     update();
@@ -209,13 +210,6 @@
 
     var data = collect(form, payMethod);
 
-    try { sessionStorage.setItem('pmi_registration', JSON.stringify(data)); } catch (err) {}
-
-    // === 支付占位 ===
-    // TODO: 真实接入 ZPAY 时 POST 到后端，body 含 type: data.payMethod（wxpay / alipay）
-    //   fetch('/api/order', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) })
-    //     .then(function (r) { return r.json(); })
-    //     .then(function (o) { if (o.payUrl) location.href = o.payUrl; })
     if (overlay) {
       overlay.hidden = false;
       if (overlayDetail) {
@@ -223,10 +217,30 @@
       }
     }
 
-    window.setTimeout(function () {
-      sendSms(data, 'confirm');
-      window.location.href = 'success.html';
-    }, 1800);
+    fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+      .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+      .then(function (res) {
+        if (!res.ok || !res.body.payUrl) {
+          throw new Error((res.body && res.body.error) || '创建支付失败');
+        }
+        var order = Object.assign({}, data, {
+          orderId: res.body.orderId,
+          payMethod: res.body.payMethod,
+          payMethodLabel: res.body.payMethodLabel,
+          ticketName: res.body.ticketName,
+          price: res.body.price
+        });
+        try { sessionStorage.setItem('pmi_registration', JSON.stringify(order)); } catch (err) {}
+        window.location.href = res.body.payUrl;
+      })
+      .catch(function (err) {
+        if (overlay) overlay.hidden = true;
+        window.alert(err.message || '网络错误，请稍后重试');
+      });
   }
 
   function validate(form) {
@@ -245,7 +259,8 @@
 
   function collect(form, payMethod) {
     var t = form.querySelector('input[name="ticket"]:checked');
-    var ticket = t ? t.value : 'standard';
+    var ticket = t && TICKETS[t.value] ? t.value : 'standard';
+    var ticketInfo = TICKETS[ticket] || TICKETS.standard;
     var method = payMethod === 'alipay' ? 'alipay' : 'wxpay';
     return {
       name: form.name.value.trim(),
@@ -258,8 +273,8 @@
       industry: form.industry.value,
       invite: form.invite.value.trim(),
       ticket: ticket,
-      ticketName: ticket === 'vip' ? 'VIP Ticket' : 'Standard Ticket',
-      price: PRICES[ticket],
+      ticketName: ticketInfo.name,
+      price: ticketInfo.price,
       payMethod: method,
       payMethodLabel: PAY_LABELS[method],
       orderId: 'RL2026-' + String(((form.phone.value || '00000000000').slice(-6)) + Math.floor(Date.now() % 10000)).padStart(10, '0')
@@ -451,10 +466,26 @@
     if (confirmBtn) {
       confirmBtn.addEventListener('click', function () {
         if ((agree && !agree.checked) || !pending) return;
-        addBarrage(pending);
-        pending = '';
-        input.value = '';
-        closeModal(modal);
+        confirmBtn.disabled = true;
+        fetch('/api/barrage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: pending, agreed_terms: true })
+        })
+          .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+          .then(function (res) {
+            if (!res.ok || !res.body.ok) throw new Error((res.body && res.body.error) || '发送失败');
+            addBarrage(pending);
+            pending = '';
+            input.value = '';
+            closeModal(modal);
+          })
+          .catch(function (err) {
+            window.alert(err.message || '发送失败，请稍后重试');
+          })
+          .finally(function () {
+            confirmBtn.disabled = !agree || !agree.checked;
+          });
       });
     }
     modal.querySelectorAll('[data-send-close]').forEach(function (el) {
@@ -507,7 +538,7 @@
       });
     }
 
-    // 注册信息提交 → 感谢页
+    // 注册信息提交 → 入库 → 感谢页
     var nform = document.getElementById('nomineeForm');
     if (nform) {
       nform.addEventListener('submit', function (e) {
@@ -517,12 +548,63 @@
           if (firstErr) firstErr.focus();
           return;
         }
-        show(4);
+        var submitBtn = nform.querySelector('[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+
+        readNomineePhoto(photo).then(function (photoData) {
+          if (photoData.error) throw new Error(photoData.error);
+          return fetch('/api/nominee', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: nform.name.value.trim(),
+              nickname: nform.nickname ? nform.nickname.value.trim() : '',
+              company: nform.company.value.trim(),
+              title: nform.title.value.trim(),
+              phone: nform.phone.value.trim(),
+              email: nform.email.value.trim(),
+              wechat: nform.wechat ? nform.wechat.value.trim() : '',
+              address: nform.address.value.trim(),
+              photo_mime: photoData.photo_mime,
+              photo_base64: photoData.photo_base64
+            })
+          });
+        })
+          .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+          .then(function (res) {
+            if (!res.ok || !res.body.ok) throw new Error((res.body && res.body.error) || '提交失败');
+            show(4);
+          })
+          .catch(function (err) {
+            window.alert(err.message || '提交失败，请稍后重试');
+          })
+          .finally(function () {
+            if (submitBtn) submitBtn.disabled = false;
+          });
       });
       nform.addEventListener('input', function (e) {
         if (e.target.classList.contains('is-invalid')) e.target.classList.remove('is-invalid');
       });
     }
+  }
+
+  function readNomineePhoto(input) {
+    return new Promise(function (resolve) {
+      var f = input && input.files && input.files[0];
+      if (!f) return resolve({ photo_mime: '', photo_base64: '' });
+      if (f.size > 800000) return resolve({ error: '照片请小于 800KB' });
+      var reader = new FileReader();
+      reader.onload = function (ev) {
+        var dataUrl = String(ev.target.result || '');
+        var parts = dataUrl.split(',');
+        resolve({
+          photo_mime: f.type || 'image/jpeg',
+          photo_base64: parts[1] || ''
+        });
+      };
+      reader.onerror = function () { resolve({ error: '照片读取失败' }); };
+      reader.readAsDataURL(f);
+    });
   }
 
   /* =========================================================

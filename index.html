@@ -13,6 +13,13 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <!-- ===== 品牌三半圆背景装饰 ===== -->
+  <div class="bg-orbs" aria-hidden="true">
+    <span class="orb orb--pink"></span>
+    <span class="orb orb--violet"></span>
+    <span class="orb orb--blue"></span>
+  </div>
+
   <!-- ===== 顶部导航 ===== -->
   <header class="nav" id="nav">
     <div class="nav__inner container">
@@ -247,6 +254,24 @@
                   <li>嘉宾茶酒交流会</li>
                   <li>优先签到及入场</li>
                   <li>VIP 伴手礼</li>
+                </ul>
+              </div>
+            </label>
+
+            <label class="ticket ticket--test" data-ticket="test">
+              <input type="radio" name="ticket" value="test" />
+              <span class="ticket__tag">测试</span>
+              <div class="ticket__body">
+                <div class="ticket__head">
+                  <span class="ticket__name">Test Ticket</span>
+                  <div class="ticket__meta">
+                    <span class="ticket__price">¥1</span>
+                    <span class="ticket__check" aria-hidden="true"></span>
+                  </div>
+                </div>
+                <ul class="ticket__list">
+                  <li>支付流程测试专用（¥1）</li>
+                  <li>不含正式活动权益</li>
                 </ul>
               </div>
             </label>
