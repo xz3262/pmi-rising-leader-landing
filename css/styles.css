@@ -134,11 +134,10 @@ body::before {
 .nav__inner { height: 100%; display: flex; align-items: center; gap: 20px; }
 .nav__brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
 .nav__logo {
-  display: grid; place-items: center;
-  width: 40px; height: 40px; border-radius: 11px;
-  font-weight: 800; font-size: 14px; letter-spacing: .04em;
-  background: var(--grad-full); color: #fff;
-  box-shadow: var(--glow);
+  display: block;
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  object-fit: contain;
 }
 .nav__brand-text { font-size: 15px; font-weight: 500; color: var(--text-soft); letter-spacing: .03em; }
 .nav__brand-text b { color: var(--text); font-weight: 700; }
