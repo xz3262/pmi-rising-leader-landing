@@ -399,9 +399,10 @@ body::before {
 }
 .ticket input { position: absolute; opacity: 0; pointer-events: none; }
 .ticket:hover { transform: translateY(-3px); border-color: var(--line-strong); }
-.ticket__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.ticket__name { font-size: 18px; font-weight: 700; }
-.ticket__price { font-size: 26px; font-weight: 800; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.ticket__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.ticket__name { font-size: 18px; font-weight: 700; min-width: 0; }
+.ticket__meta { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.ticket__price { font-size: 26px; font-weight: 800; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1; }
 .ticket__list { display: flex; flex-direction: column; gap: 8px; }
 .ticket__list li { position: relative; padding-left: 24px; font-size: 13.5px; color: var(--text-soft); line-height: 1.5; }
 .ticket__list li::before {
@@ -410,7 +411,10 @@ body::before {
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") center/12px no-repeat;
           mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") center/12px no-repeat;
 }
-.ticket__check { position: absolute; top: 20px; right: 20px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line-strong); transition: all .25s ease; }
+.ticket__check {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--line-strong); transition: all .25s ease;
+}
 .ticket__tag { position: absolute; top: -10px; left: 22px; padding: 3px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .08em; background: var(--grad-warm); color: #fff; box-shadow: var(--glow); }
 
 .ticket:has(input:checked) { border-color: var(--pink); box-shadow: 0 0 0 1px var(--pink), 0 20px 50px -20px rgba(224,53,154,.6); transform: translateY(-3px); }
