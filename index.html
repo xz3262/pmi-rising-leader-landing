@@ -407,6 +407,13 @@
   <div class="modal nominee" id="nomineeModal" hidden>
     <div class="modal__mask" data-nominee-close></div>
     <div class="modal__panel nominee__panel" role="dialog" aria-modal="true" aria-labelledby="nomineeTitle">
+      <div class="nominee__uploading" id="nomineeUploadOverlay" hidden>
+        <div class="nominee__uploading-card">
+          <div class="spinner" aria-hidden="true"></div>
+          <p id="nomineeUploadTitle">正在上传…</p>
+          <small id="nomineeUploadDetail">请稍候</small>
+        </div>
+      </div>
       <button class="modal__x" type="button" aria-label="关闭" data-nominee-close>&times;</button>
 
       <!-- 进度点 -->
@@ -446,6 +453,7 @@
                 <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 20a8 8 0 0 1 16 0"/></svg>
               </span>
               <span class="photo-up__text">上传个人照片</span>
+              <span class="photo-up__hint">10MB 以内，大图将自动压缩</span>
             </label>
           </div>
           <div class="field-row">

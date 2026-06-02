@@ -850,7 +850,21 @@ body.modal-open { overflow: hidden; }
 /* =========================================================
    Nominee 获奖流程弹窗
    ========================================================= */
-.nominee__panel { max-width: 560px; text-align: center; }
+.nominee__panel { position: relative; max-width: 560px; text-align: center; }
+.nominee__uploading {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: rgba(8, 4, 20, .88);
+  backdrop-filter: blur(8px);
+}
+.nominee__uploading[hidden] { display: none; }
+.nominee__uploading-card { text-align: center; padding: 24px; }
+.nominee__uploading-card p { margin-top: 18px; font-size: 17px; font-weight: 600; }
+.nominee__uploading-card small { display: block; margin-top: 8px; color: var(--text-muted); font-size: 13px; }
 .nominee__dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 22px; }
 .nominee__dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); transition: all .3s ease; }
 .nominee__dots span.is-active { width: 22px; border-radius: 4px; background: var(--grad-full); }
@@ -898,6 +912,7 @@ body.modal-open { overflow: hidden; }
 .photo-up__preview img { width: 100%; height: 100%; object-fit: cover; }
 .photo-up.has-photo .photo-up__preview { border-style: solid; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255,77,141,.18); }
 .photo-up__text { font-size: 13px; color: var(--text-soft); }
+.photo-up__hint { font-size: 11px; color: var(--text-muted); line-height: 1.4; max-width: 220px; text-align: center; }
 
 /* 互动区 / 弹窗 响应式 */
 @media (max-width: 760px) {

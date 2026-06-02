@@ -9,7 +9,7 @@ function validateNominee(body) {
   if (!/^1\d{10}$/.test(String(body.phone || '').trim())) errors.push('请填写正确手机号');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(body.email || '').trim())) errors.push('请填写正确邮箱');
   if (!body.address || !String(body.address).trim()) errors.push('请填写收件地址');
-  if (body.photo_base64 && String(body.photo_base64).length > 1200000) {
+  if (body.photo_base64 && String(body.photo_base64).length > 4000000) {
     errors.push('照片过大，请换一张较小的图片');
   }
   return errors;

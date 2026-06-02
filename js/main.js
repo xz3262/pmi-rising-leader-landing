@@ -717,6 +717,17 @@
       });
     }
 
+    var uploadOverlay = document.getElementById('nomineeUploadOverlay');
+    var uploadTitle = document.getElementById('nomineeUploadTitle');
+    var uploadDetail = document.getElementById('nomineeUploadDetail');
+
+    function setNomineeUploading(show, title, detail) {
+      if (!uploadOverlay) return;
+      uploadOverlay.hidden = !show;
+      if (uploadTitle && title) uploadTitle.textContent = title;
+      if (uploadDetail) uploadDetail.textContent = detail || '请稍候';
+    }
+
     // 注册信息提交 → 入库 → 感谢页
     var nform = document.getElementById('nomineeForm');
     if (nform) {
@@ -729,26 +740,29 @@
         }
         var submitBtn = nform.querySelector('[type="submit"]');
         if (submitBtn) submitBtn.disabled = true;
+        setNomineeUploading(true, '正在处理照片…', '大图会自动压缩，请稍候');
 
-        readNomineePhoto(photo).then(function (photoData) {
-          if (photoData.error) throw new Error(photoData.error);
-          return fetch('/api/nominee', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: nform.name.value.trim(),
-              nickname: nform.nickname ? nform.nickname.value.trim() : '',
-              company: nform.company.value.trim(),
-              title: nform.title.value.trim(),
-              phone: nform.phone.value.trim(),
-              email: nform.email.value.trim(),
-              wechat: nform.wechat ? nform.wechat.value.trim() : '',
-              address: nform.address.value.trim(),
-              photo_mime: photoData.photo_mime,
-              photo_base64: photoData.photo_base64
-            })
-          });
-        })
+        compressNomineePhoto(photo)
+          .then(function (photoData) {
+            if (photoData.error) throw new Error(photoData.error);
+            setNomineeUploading(true, '正在上传…', '请勿关闭页面');
+            return fetch('/api/nominee', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: nform.name.value.trim(),
+                nickname: nform.nickname ? nform.nickname.value.trim() : '',
+                company: nform.company.value.trim(),
+                title: nform.title.value.trim(),
+                phone: nform.phone.value.trim(),
+                email: nform.email.value.trim(),
+                wechat: nform.wechat ? nform.wechat.value.trim() : '',
+                address: nform.address.value.trim(),
+                photo_mime: photoData.photo_mime,
+                photo_base64: photoData.photo_base64
+              })
+            });
+          })
           .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
           .then(function (res) {
             if (!res.ok || !res.body.ok) throw new Error((res.body && res.body.error) || '提交失败');
@@ -758,6 +772,7 @@
             window.alert(err.message || '提交失败，请稍后重试');
           })
           .finally(function () {
+            setNomineeUploading(false);
             if (submitBtn) submitBtn.disabled = false;
           });
       });
@@ -767,22 +782,100 @@
     }
   }
 
-  function readNomineePhoto(input) {
-    return new Promise(function (resolve) {
-      var f = input && input.files && input.files[0];
-      if (!f) return resolve({ photo_mime: '', photo_base64: '' });
-      if (f.size > 800000) return resolve({ error: '照片请小于 800KB' });
+  var NOMINEE_PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+  var NOMINEE_PHOTO_MAX_EDGE = 2400;
+  var NOMINEE_JPEG_QUALITY = 0.82;
+  var NOMINEE_JPEG_QUALITY_LOW = 0.72;
+
+  function blobToBase64Payload(blob) {
+    return new Promise(function (resolve, reject) {
       var reader = new FileReader();
       reader.onload = function (ev) {
-        var dataUrl = String(ev.target.result || '');
-        var parts = dataUrl.split(',');
+        var parts = String(ev.target.result || '').split(',');
         resolve({
-          photo_mime: f.type || 'image/jpeg',
+          photo_mime: 'image/jpeg',
           photo_base64: parts[1] || ''
         });
       };
-      reader.onerror = function () { resolve({ error: '照片读取失败' }); };
-      reader.readAsDataURL(f);
+      reader.onerror = function () { reject(new Error('照片读取失败')); };
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function canvasToJpegBlob(canvas, quality) {
+    return new Promise(function (resolve) {
+      canvas.toBlob(function (blob) { resolve(blob); }, 'image/jpeg', quality);
+    });
+  }
+
+  function encodeNomineeCanvas(canvas) {
+    return canvasToJpegBlob(canvas, NOMINEE_JPEG_QUALITY).then(function (blob) {
+      if (blob && blob.size <= 3.2 * 1024 * 1024) return blob;
+      return canvasToJpegBlob(canvas, NOMINEE_JPEG_QUALITY_LOW);
+    });
+  }
+
+  function drawNomineeSourceToCanvas(source, width, height) {
+    var canvas = document.createElement('canvas');
+    var scale = Math.min(1, NOMINEE_PHOTO_MAX_EDGE / Math.max(width, height, 1));
+    canvas.width = Math.max(1, Math.round(width * scale));
+    canvas.height = Math.max(1, Math.round(height * scale));
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return Promise.reject(new Error('照片处理失败'));
+    ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+    return encodeNomineeCanvas(canvas);
+  }
+
+  function compressNomineePhoto(input) {
+    return new Promise(function (resolve) {
+      var f = input && input.files && input.files[0];
+      if (!f) return resolve({ photo_mime: '', photo_base64: '' });
+      if (f.size > NOMINEE_PHOTO_MAX_BYTES) {
+        return resolve({ error: '照片请小于 10MB' });
+      }
+      if (!/^image\//i.test(f.type || '')) {
+        return resolve({ error: '请上传图片文件' });
+      }
+
+      function done(blob) {
+        if (!blob) return resolve({ error: '照片处理失败' });
+        blobToBase64Payload(blob)
+          .then(function (payload) { resolve(payload); })
+          .catch(function (err) { resolve({ error: err.message || '照片读取失败' }); });
+      }
+
+      function fail() { resolve({ error: '照片读取失败' }); }
+
+      if (window.createImageBitmap) {
+        createImageBitmap(f, { imageOrientation: 'from-image' })
+          .then(function (bitmap) {
+            return drawNomineeSourceToCanvas(bitmap, bitmap.width, bitmap.height)
+              .then(function (blob) {
+                if (bitmap.close) bitmap.close();
+                done(blob);
+              });
+          })
+          .catch(function () { loadWithImage(); });
+        return;
+      }
+
+      loadWithImage();
+
+      function loadWithImage() {
+        var url = URL.createObjectURL(f);
+        var img = new Image();
+        img.onload = function () {
+          drawNomineeSourceToCanvas(img, img.naturalWidth, img.naturalHeight)
+            .then(done)
+            .catch(fail);
+          URL.revokeObjectURL(url);
+        };
+        img.onerror = function () {
+          URL.revokeObjectURL(url);
+          fail();
+        };
+        img.src = url;
+      }
     });
   }
 
