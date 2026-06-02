@@ -90,7 +90,7 @@ body::before {
 /* 右上 · 珊瑚→品红（大圆推出，只露贴边弧线） */
 .orb--pink {
   width: clamp(420px, 54vw, 880px); aspect-ratio: 1;
-  top: -28vw; right: -20vw;
+  top: -32vw; right: -24vw;
   background: linear-gradient(150deg, #ff8a5b 0%, #ff4d8d 44%, #d12c8f 100%);
   filter: blur(6px);
   opacity: .72;
@@ -107,7 +107,7 @@ body::before {
 /* 右下 · 薰衣草紫→蓝（大圆推出，只露贴边弧线） */
 .orb--blue {
   width: clamp(420px, 54vw, 880px); aspect-ratio: 1;
-  bottom: -28vw; right: -18vw;
+  bottom: -32vw; right: -22vw;
   background: linear-gradient(135deg, #7c4dbb 0%, #4d6ef5 56%, #3f53d8 100%);
   filter: blur(6px);
   opacity: .62;
