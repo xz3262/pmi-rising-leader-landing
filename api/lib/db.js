@@ -1,6 +1,6 @@
 const { createClient } = require('@libsql/client');
 const { env } = require('./zpay');
-const { nowUtcIso } = require('./time');
+const { nowChinaSql } = require('./time');
 
 var client = null;
 var ready = false;
@@ -80,6 +80,26 @@ async function migrateOrdersSchema(db) {
     await db.execute("UPDATE orders SET paid_at = datetime(paid_at, '+8 hours') WHERE paid_at IS NOT NULL AND paid_at != ''");
     await db.execute("UPDATE nominees SET created_at = datetime(created_at, '+8 hours') WHERE created_at IS NOT NULL AND created_at != ''");
     await db.execute("UPDATE barrage_messages SET created_at = datetime(created_at, '+8 hours') WHERE created_at IS NOT NULL AND created_at != ''");
+  });
+
+  await runMigrationOnce(db, 'utc_iso_to_beijing_v2', async function () {
+    var specs = [
+      { table: 'orders', columns: ['created_at', 'paid_at', 'notify_at'] },
+      { table: 'nominees', columns: ['created_at'] },
+      { table: 'barrage_messages', columns: ['created_at'] },
+      { table: 'ticket_verifications', columns: ['scanned_at'] }
+    ];
+    for (var i = 0; i < specs.length; i++) {
+      var spec = specs[i];
+      for (var j = 0; j < spec.columns.length; j++) {
+        var col = spec.columns[j];
+        var expr = "datetime(replace(substr(" + col + ", 1, 19), 'T', ' '), '+8 hours')";
+        await db.execute(
+          'UPDATE ' + spec.table + ' SET ' + col + ' = ' + expr +
+          " WHERE " + col + " LIKE '%Z' OR " + col + " LIKE '%z'"
+        );
+      }
+    }
   });
 }
 
@@ -196,7 +216,7 @@ async function insertOrder(order) {
       order.pay_method,
       order.client_ip || '',
       order.user_agent || '',
-      nowUtcIso()
+      nowChinaSql()
     ]
   });
 }
@@ -224,9 +244,9 @@ async function markOrderPaid(merchantOrderNo, payment, paidSource) {
       payment.paid_money != null ? payment.paid_money : null,
       payment.buyer || '',
       source,
-      nowUtcIso(),
+      nowChinaSql(),
       source,
-      nowUtcIso(),
+      nowChinaSql(),
       merchantOrderNo
     ]
   });
@@ -242,7 +262,7 @@ async function recordNotifyReceived(merchantOrderNo) {
       SET notify_at = COALESCE(notify_at, ?)
       WHERE merchant_order_no = ?
     `,
-    args: [nowUtcIso(), merchantOrderNo]
+    args: [nowChinaSql(), merchantOrderNo]
   });
 }
 
@@ -252,6 +272,32 @@ async function getOrder(merchantOrderNo) {
   var result = await db.execute({
     sql: 'SELECT * FROM orders WHERE merchant_order_no = ? LIMIT 1',
     args: [merchantOrderNo]
+  });
+  if (!result.rows.length) return null;
+  return result.rows[0];
+}
+
+async function listNomineesBrief() {
+  await ensureSchema();
+  var db = getClient();
+  var result = await db.execute(`
+    SELECT
+      id, name, nickname, company, title, phone, email, wechat, address,
+      photo_mime,
+      CASE WHEN photo_base64 IS NOT NULL AND length(trim(photo_base64)) > 0 THEN 1 ELSE 0 END AS has_photo,
+      created_at
+    FROM nominees
+    ORDER BY id DESC
+  `);
+  return result.rows;
+}
+
+async function getNomineeById(id) {
+  await ensureSchema();
+  var db = getClient();
+  var result = await db.execute({
+    sql: 'SELECT * FROM nominees WHERE id = ? LIMIT 1',
+    args: [id]
   });
   if (!result.rows.length) return null;
   return result.rows[0];
@@ -297,7 +343,7 @@ async function recordTicketVerification(merchantOrderNo, meta) {
       merchantOrderNo,
       meta && meta.clientIp ? meta.clientIp : '',
       meta && meta.userAgent ? meta.userAgent : '',
-      nowUtcIso()
+      nowChinaSql()
     ]
   });
 }
@@ -345,6 +391,8 @@ module.exports = {
   getOrder,
   recordTicketVerification,
   listTicketVerifications,
+  listNomineesBrief,
+  getNomineeById,
   insertNominee,
   insertBarrageMessage
 };

@@ -15,15 +15,33 @@ function formatInstantChina(date) {
   }).format(date);
 }
 
-/** 写入数据库用：UTC ISO，避免 SQLite datetime 时区不准 */
-function nowUtcIso() {
-  return new Date().toISOString();
+/** 写入数据库：北京时间 YYYY-MM-DD HH:MM:SS（与 Turso 控制台一致） */
+function nowChinaSql() {
+  var d = new Date();
+  var parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).formatToParts(d);
+
+  function part(type) {
+    var hit = parts.find(function (p) { return p.type === type; });
+    return hit ? hit.value : '';
+  }
+
+  return part('year') + '-' + part('month') + '-' + part('day') + ' ' +
+    part('hour') + ':' + part('minute') + ':' + part('second');
 }
 
 /**
  * 解析库里的时间：
  * - 带 Z / 时区偏移 → 按真实瞬间解析
- * - 旧数据无偏移 → 按 UTC 理解（Turso 默认 datetime('now')）
+ * - 无偏移 → 已是北京时间（SQLite datetime('now','+8 hours') 或 nowChinaSql）
  */
 function parseStoredInstant(value) {
   if (!value) return null;
@@ -35,8 +53,9 @@ function parseStoredInstant(value) {
     return isNaN(parsed.getTime()) ? null : parsed;
   }
 
-  var legacy = new Date(s.replace(' ', 'T') + 'Z');
-  return isNaN(legacy.getTime()) ? null : legacy;
+  var normalized = s.replace(' ', 'T').slice(0, 19);
+  var china = new Date(normalized + '+08:00');
+  return isNaN(china.getTime()) ? null : china;
 }
 
 function formatStoredChina(value) {
@@ -46,7 +65,7 @@ function formatStoredChina(value) {
 }
 
 module.exports = {
-  nowUtcIso,
+  nowChinaSql,
   formatStoredChina,
   parseStoredInstant,
   formatInstantChina
