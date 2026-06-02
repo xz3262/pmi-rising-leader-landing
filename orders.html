@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#120c24" />
+  <link rel="icon" href="/assets/favicon-pmi.png" type="image/png" />
+  <title>购票订单 · 只读</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <main class="ord-admin-page">
+    <div class="ord-admin">
+      <div class="ord-admin__brand">PMI RISING LEADER 2026</div>
+      <h1 class="ord-admin__title">购票订单</h1>
+      <p class="ord-admin__sub">只读查看，一行一条订单</p>
+
+      <form class="ord-admin__gate" id="ordAdminGate" hidden>
+        <label class="ord-admin__gate-label" for="ordAdminKey">访问密钥</label>
+        <input class="ord-admin__gate-input" id="ordAdminKey" type="password" autocomplete="off" placeholder="请输入密钥" />
+        <button class="btn btn--lg btn--gradient btn--block" type="submit">进入</button>
+        <p class="ord-admin__gate-hint" id="ordAdminGateHint" hidden></p>
+      </form>
+
+      <p class="ord-admin__status" id="ordAdminStatus">加载中…</p>
+
+      <div class="ord-admin__table-wrap" id="ordAdminTableWrap" hidden>
+        <table class="ord-admin__table">
+          <thead>
+            <tr>
+              <th>购票人</th>
+              <th>公司 · 岗位</th>
+              <th>票种</th>
+              <th>类型</th>
+              <th>金额</th>
+              <th>购买时间</th>
+              <th>订单号</th>
+            </tr>
+          </thead>
+          <tbody id="ordAdminTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/orders-admin.js"></script>
+</body>
+</html>

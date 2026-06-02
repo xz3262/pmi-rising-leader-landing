@@ -778,6 +778,61 @@ body::before {
 .nom-admin-detail__rows { display: grid; gap: 12px; }
 body.nom-admin-detail-open { overflow: hidden; }
 
+/* 购票订单只读管理页 */
+.ord-admin-page { min-height: 100svh; padding: 40px 16px 64px; }
+.ord-admin { width: min(100%, 1100px); margin: 0 auto; }
+.ord-admin__brand { font-size: 11px; font-weight: 700; letter-spacing: .18em; color: #9485ad; margin-bottom: 14px; }
+.ord-admin__title { font-size: clamp(22px, 5vw, 30px); font-weight: 800; margin-bottom: 6px; }
+.ord-admin__sub { color: var(--text-soft); font-size: 14px; margin-bottom: 22px; line-height: 1.6; }
+.ord-admin__gate { display: grid; gap: 10px; max-width: 420px; margin-bottom: 20px; }
+.ord-admin__gate-label { font-size: 13px; font-weight: 600; color: #9485ad; }
+.ord-admin__gate-input {
+  width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04); color: var(--text); font-size: 15px;
+}
+.ord-admin__gate-hint { font-size: 13px; color: #f5a3a8; margin: 0; }
+.ord-admin__status { font-size: 14px; color: var(--text-soft); margin-bottom: 14px; min-height: 1.4em; }
+.ord-admin__table-wrap {
+  overflow-x: auto; border-radius: 14px; border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.03);
+}
+.ord-admin__table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 880px; }
+.ord-admin__table th,
+.ord-admin__table td {
+  padding: 12px 14px; text-align: left; vertical-align: top;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.ord-admin__table th {
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; color: #9485ad;
+  background: rgba(255,255,255,.04); white-space: nowrap;
+}
+.ord-admin__table tbody tr:last-child td { border-bottom: none; }
+.ord-admin__table tbody tr:hover td { background: rgba(224,53,154,.06); }
+.ord-admin__name { display: block; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.ord-admin__mono { font-size: 12px; font-weight: 500; letter-spacing: .02em; color: var(--text-soft); word-break: break-all; }
+.ord-admin__pill {
+  display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+}
+.ord-admin__pill--ok { color: #0f5132; background: rgba(25,135,84,.16); border: 1px solid rgba(25,135,84,.28); }
+.ord-admin__pill--pending { color: #664d03; background: rgba(255,193,7,.14); border: 1px solid rgba(255,193,7,.28); }
+
+@media (max-width: 720px) {
+  .ord-admin__table { min-width: 0; }
+  .ord-admin__table thead { display: none; }
+  .ord-admin__table tbody tr {
+    display: block; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+  .ord-admin__table tbody tr:last-child { border-bottom: none; }
+  .ord-admin__table td {
+    display: grid; grid-template-columns: 88px 1fr; gap: 8px;
+    padding: 6px 0; border: none;
+  }
+  .ord-admin__table td::before {
+    content: attr(data-label);
+    font-size: 11px; font-weight: 700; color: #9485ad;
+  }
+}
+
 /* =========================================================
    第六屏 互动 · 弹幕墙
    ========================================================= */

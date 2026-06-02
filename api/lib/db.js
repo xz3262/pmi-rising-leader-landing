@@ -277,6 +277,21 @@ async function getOrder(merchantOrderNo) {
   return result.rows[0];
 }
 
+async function listOrdersForAdmin() {
+  await ensureSchema();
+  var db = getClient();
+  var result = await db.execute(`
+    SELECT
+      merchant_order_no, name, company, title,
+      ticket, ticket_name, price, paid_money, status,
+      created_at, paid_at
+    FROM orders
+    ORDER BY datetime(COALESCE(NULLIF(paid_at, ''), created_at)) DESC,
+             datetime(created_at) DESC
+  `);
+  return result.rows;
+}
+
 async function listNomineesBrief() {
   await ensureSchema();
   var db = getClient();
@@ -389,6 +404,7 @@ module.exports = {
   markOrderPaid,
   recordNotifyReceived,
   getOrder,
+  listOrdersForAdmin,
   recordTicketVerification,
   listTicketVerifications,
   listNomineesBrief,

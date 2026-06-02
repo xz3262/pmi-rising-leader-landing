@@ -4,7 +4,8 @@
     { "source": "/index.html", "destination": "/", "permanent": true },
     { "source": "/success.html", "destination": "/success", "permanent": true },
     { "source": "/verify.html", "destination": "/verify", "permanent": true },
-    { "source": "/nominees.html", "destination": "/nominees", "permanent": true }
+    { "source": "/nominees.html", "destination": "/nominees", "permanent": true },
+    { "source": "/orders.html", "destination": "/orders", "permanent": true }
   ],
   "rewrites": [
     { "source": "/v/:order", "destination": "/verify?order=:order" }

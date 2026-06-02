@@ -1,14 +1,7 @@
 const { listNomineesBrief, getNomineeById } = require('./lib/db');
 const { json } = require('./lib/http');
-const { env } = require('./lib/zpay');
 const { formatStoredChina } = require('./lib/time');
-
-function adminKeyOk(req) {
-  var secret = env('NOMINEE_ADMIN_SECRET');
-  if (!secret) return false;
-  var key = String(req.query.key || req.headers['x-nominee-admin-key'] || '').trim();
-  return key.length > 0 && key === secret;
-}
+const { adminKeyOk, adminSecretConfigured } = require('./lib/admin');
 
 function rowToBrief(row) {
   return {
@@ -56,7 +49,7 @@ module.exports = async function handler(req, res) {
     return json(res, 405, { error: 'Method not allowed' });
   }
 
-  if (!env('NOMINEE_ADMIN_SECRET')) {
+  if (!adminSecretConfigured()) {
     return json(res, 503, { error: '未配置访问密钥，请在环境变量设置 NOMINEE_ADMIN_SECRET' });
   }
   if (!adminKeyOk(req)) {
