@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#120c24" />
+  <link rel="icon" href="assets/favicon-pmi.png" type="image/png" />
+  <title>验票 · PMI Rising Leader 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main class="verify-page">
+    <div class="verify">
+      <div class="verify__brand">PMI RISING LEADER 2026</div>
+      <h1 class="verify__title" id="verifyTitle">验票中…</h1>
+      <p class="verify__sub" id="verifySub">正在查询门票信息</p>
+
+      <div class="verify__card" id="verifyCard" hidden>
+        <div class="verify__badge" id="verifyBadge">门票有效</div>
+        <div class="verify__rows">
+          <div class="verify__row">
+            <div class="verify__k">参会人</div>
+            <div class="verify__v" id="vName">——</div>
+          </div>
+          <div class="verify__row">
+            <div class="verify__k">单位</div>
+            <div class="verify__v" id="vCompany">——</div>
+          </div>
+          <div class="verify__row">
+            <div class="verify__k">票种</div>
+            <div class="verify__v" id="vTicket">——</div>
+          </div>
+          <div class="verify__row">
+            <div class="verify__k">订单号</div>
+            <div class="verify__v verify__v--mono" id="vOrder">——</div>
+          </div>
+          <div class="verify__row verify__row--full">
+            <div class="verify__k">活动</div>
+            <div class="verify__v">2026年6月27日 · 苏州园区香格里拉大酒店</div>
+          </div>
+        </div>
+      </div>
+
+      <p class="verify__note" id="verifyNote" hidden>请核对参会人信息无误后放行。</p>
+    </div>
+  </main>
+
+  <script src="js/verify.js"></script>
+</body>
+</html>

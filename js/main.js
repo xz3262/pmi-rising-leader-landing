@@ -160,25 +160,101 @@
   var TICKETS = {
     standard: { price: 399, name: 'Standard Ticket' },
     vip: { price: 699, name: 'VIP Ticket' },
-    test: { price: 1, name: 'Test Ticket（支付测试）' }
+    test: { price: 1, name: 'Test Ticket（支付测试）' },
+    free: { price: 0, name: 'Invitation Ticket' }
   };
+
+  // 邀请码免费票：填入下列邀请码即可解锁免费票并直接出票（大小写不敏感）
+  var FREE_INVITE_CODES = ['PMI100'];
+  function isFreeInvite(code) {
+    return FREE_INVITE_CODES.indexOf(String(code || '').trim().toUpperCase()) !== -1;
+  }
 
   function initTickets() {
     var form = document.getElementById('regForm');
     if (!form) return;
     var totalEl = document.getElementById('totalPrice');
     var radios = form.querySelectorAll('input[name="ticket"]');
+    var inviteEl = form.querySelector('#f-invite');
+    var inviteBtn = document.getElementById('inviteBtn');
+    var inviteMsg = document.getElementById('inviteMsg');
+    var freeTicket = document.getElementById('ticketFree');
+    var payWrap = document.getElementById('payWrap');
+    var freeClaim = document.getElementById('freeClaim');
+    var freeCodeLabel = document.getElementById('freeCodeLabel');
+    var inviteOk = false;
 
-    function update() {
-      var val = form.querySelector('input[name="ticket"]:checked');
-      var ticket = val && TICKETS[val.value] ? TICKETS[val.value] : TICKETS.standard;
-      if (totalEl) totalEl.textContent = '¥' + ticket.price;
+    function selectedVal() {
+      var v = form.querySelector('input[name="ticket"]:checked');
+      return v ? v.value : 'standard';
     }
-    radios.forEach(function (r) { r.addEventListener('change', update); });
-    update();
+    function selectTicket(value) {
+      var radio = form.querySelector('input[name="ticket"][value="' + value + '"]');
+      if (radio) radio.checked = true;
+    }
+    function setInviteMsg(text, kind) {
+      if (!inviteMsg) return;
+      inviteMsg.textContent = text || '';
+      inviteMsg.hidden = !text;
+      inviteMsg.className = 'invite__msg' + (kind ? ' invite__msg--' + kind : '');
+    }
+
+    // 票种 → 合计金额 + 支付区 / 免费领取区切换
+    function syncMode() {
+      var val = selectedVal();
+      var ticket = TICKETS[val] || TICKETS.standard;
+      if (totalEl) totalEl.textContent = ticket.price > 0 ? ('¥' + ticket.price) : '免费';
+      var isFree = (val === 'free');
+      if (payWrap) payWrap.hidden = isFree;
+      if (freeClaim) freeClaim.hidden = !isFree;
+    }
+
+    var freeRadio = freeTicket ? freeTicket.querySelector('input[name="ticket"]') : null;
+
+    // 收起免费票（邀请码未确认 / 被改动时）
+    function lockFree() {
+      inviteOk = false;
+      if (freeTicket) freeTicket.hidden = true;
+      if (freeRadio) freeRadio.disabled = true;
+      if (selectedVal() === 'free') selectTicket('standard');
+      syncMode();
+    }
+
+    // 点击「确认」才校验邀请码并解锁免费票
+    function confirmInvite() {
+      var code = inviteEl ? inviteEl.value.trim() : '';
+      if (!code) { lockFree(); setInviteMsg('请输入邀请码', 'err'); return; }
+      if (isFreeInvite(code)) {
+        inviteOk = true;
+        if (freeCodeLabel) freeCodeLabel.textContent = code.toUpperCase();
+        if (freeTicket) freeTicket.hidden = false;
+        if (freeRadio) freeRadio.disabled = false;
+        selectTicket('free');
+        setInviteMsg('邀请码有效，已为你解锁免费票', 'ok');
+        syncMode();
+      } else {
+        lockFree();
+        setInviteMsg('邀请码无效，请确认后重试', 'err');
+      }
+    }
+
+    radios.forEach(function (r) { r.addEventListener('change', syncMode); });
+    if (inviteBtn) inviteBtn.addEventListener('click', confirmInvite);
+    if (inviteEl) {
+      // 确认后再修改邀请码，需重新确认
+      inviteEl.addEventListener('input', function () {
+        if (inviteOk) lockFree();
+        setInviteMsg('', null);
+      });
+      inviteEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); confirmInvite(); }
+      });
+    }
+    lockFree();
+    syncMode();
   }
 
-  var PAY_LABELS = { wxpay: '微信支付', alipay: '支付宝' };
+  var PAY_LABELS = { wxpay: '微信支付', alipay: '支付宝', free: '邀请码免费票' };
 
   /* =========================================================
      6. 表单校验 + 支付占位跳转（微信 / 支付宝）
@@ -189,12 +265,19 @@
     var overlay = document.getElementById('payOverlay');
     var overlayDetail = document.getElementById('payOverlayDetail');
     var payBtns = form.querySelectorAll('[data-pay]');
+    var claimFree = document.getElementById('claimFree');
 
     payBtns.forEach(function (btn) {
       btn.addEventListener('click', function () {
         startPay(form, btn.getAttribute('data-pay'), overlay, overlayDetail);
       });
     });
+
+    if (claimFree) {
+      claimFree.addEventListener('click', function () {
+        startFree(form, overlay, overlayDetail);
+      });
+    }
 
     // 阻止回车误提交（须点击支付方式按钮）
     form.addEventListener('submit', function (e) { e.preventDefault(); });
@@ -218,6 +301,7 @@
 
     if (overlay) {
       overlay.hidden = false;
+      setOverlayTitle('正在跳转至支付页面…');
       if (overlayDetail) {
         overlayDetail.textContent = data.payMethodLabel + ' · ' + data.ticketName + ' · ¥' + data.price;
       }
@@ -249,6 +333,59 @@
       });
   }
 
+  // 邀请码免费票：免支付，提交后直接出票并跳转成功页
+  function startFree(form, overlay, overlayDetail) {
+    if (!validate(form)) {
+      var firstErr = form.querySelector('.is-invalid');
+      if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (!isFreeInvite(form.invite.value)) {
+      window.alert('邀请码无效，请确认后重试');
+      return;
+    }
+
+    var data = collect(form, 'free');
+
+    if (overlay) {
+      overlay.hidden = false;
+      setOverlayTitle('正在为您出票…');
+      if (overlayDetail) overlayDetail.textContent = data.ticketName + ' · 免费（邀请码）';
+    }
+
+    fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+      .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+      .then(function (res) {
+        if (!res.ok || !res.body.orderId) {
+          throw new Error((res.body && res.body.error) || '出票失败');
+        }
+        var order = Object.assign({}, data, {
+          orderId: res.body.orderId,
+          merchantOrderNo: res.body.orderId,
+          payMethod: 'free',
+          payMethodLabel: res.body.payMethodLabel || PAY_LABELS.free,
+          ticketName: res.body.ticketName,
+          price: res.body.price
+        });
+        try { sessionStorage.setItem('pmi_registration', JSON.stringify(order)); } catch (err) {}
+        window.location.href = res.body.returnUrl ||
+          ('success.html?out_trade_no=' + encodeURIComponent(res.body.orderId));
+      })
+      .catch(function (err) {
+        if (overlay) overlay.hidden = true;
+        window.alert(err.message || '网络错误，请稍后重试');
+      });
+  }
+
+  function setOverlayTitle(text) {
+    var el = document.getElementById('payOverlayTitle');
+    if (el) el.textContent = text;
+  }
+
   function validate(form) {
     var ok = true;
     var required = form.querySelectorAll('[required]');
@@ -267,7 +404,7 @@
     var t = form.querySelector('input[name="ticket"]:checked');
     var ticket = t && TICKETS[t.value] ? t.value : 'standard';
     var ticketInfo = TICKETS[ticket] || TICKETS.standard;
-    var method = payMethod === 'alipay' ? 'alipay' : 'wxpay';
+    var method = payMethod === 'free' ? 'free' : (payMethod === 'alipay' ? 'alipay' : 'wxpay');
     return {
       name: form.name.value.trim(),
       nickname: form.nickname ? form.nickname.value.trim() : '',

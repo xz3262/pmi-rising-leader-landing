@@ -58,8 +58,23 @@
     setText('etName', order.name || '——');
     setText('etCompany', order.company || '——');
     setText('etPay', order.payMethodLabel || '——');
-    setText('qrOrder', '商户单号 ' + (order.merchantOrderNo || order.orderId || orderId));
-    drawPlaceholderQR('qrCanvas', order.orderId || orderId);
+    var ticketOrderId = order.merchantOrderNo || order.orderId || orderId;
+    setText('qrOrder', '商户单号 ' + ticketOrderId);
+    showVerifyQR(ticketOrderId);
+  }
+
+  function showVerifyQR(ticketOrderId) {
+    var canvas = document.getElementById('qrCanvas');
+    if (!canvas || !ticketOrderId) return;
+
+    var verifyUrl = window.location.origin + '/verify.html?order=' + encodeURIComponent(ticketOrderId);
+    var img = document.createElement('img');
+    img.className = 'qr__code';
+    img.alt = '验票二维码';
+    img.width = 168;
+    img.height = 168;
+    img.src = '/api/qr?data=' + encodeURIComponent(verifyUrl);
+    canvas.replaceWith(img);
   }
 
   function fetchOrder() {
@@ -91,44 +106,4 @@
 
   showPending();
   fetchOrder();
-
-  /* 32x32 网格占位二维码 —— 仅作视觉占位，非真实可解码内容 */
-  function drawPlaceholderQR(canvasId, seedStr) {
-    var canvas = document.getElementById(canvasId);
-    if (!canvas || !canvas.getContext) return;
-    var N = 33;
-    canvas.width = N; canvas.height = N;
-    var ctx = canvas.getContext('2d');
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, N, N);
-    ctx.fillStyle = '#1a1033';
-
-    var seed = 0;
-    for (var i = 0; i < seedStr.length; i++) seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0;
-    function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
-
-    for (var y = 0; y < N; y++) {
-      for (var x = 0; x < N; x++) {
-        if (isFinderZone(x, y, N)) continue;
-        if (rnd() > 0.5) ctx.fillRect(x, y, 1, 1);
-      }
-    }
-    drawFinder(ctx, 0, 0);
-    drawFinder(ctx, N - 7, 0);
-    drawFinder(ctx, 0, N - 7);
-  }
-
-  function isFinderZone(x, y, N) {
-    return (x < 8 && y < 8) || (x >= N - 8 && y < 8) || (x < 8 && y >= N - 8);
-  }
-
-  function drawFinder(ctx, ox, oy) {
-    ctx.fillStyle = '#1a1033';
-    ctx.fillRect(ox, oy, 7, 7);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(ox + 1, oy + 1, 5, 5);
-    ctx.fillStyle = '#1a1033';
-    ctx.fillRect(ox + 2, oy + 2, 3, 3);
-  }
 })();

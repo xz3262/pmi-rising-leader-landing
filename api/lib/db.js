@@ -188,7 +188,7 @@ async function insertOrder(order) {
 async function markOrderPaid(merchantOrderNo, payment, paidSource) {
   await ensureSchema();
   var db = getClient();
-  var source = paidSource === 'notify' ? 'notify' : 'sync';
+  var source = paidSource === 'notify' ? 'notify' : (paidSource === 'free' ? 'free' : 'sync');
   var result = await db.execute({
     sql: `
       UPDATE orders

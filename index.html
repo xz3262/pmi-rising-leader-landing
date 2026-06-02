@@ -212,7 +212,11 @@
             </div>
             <div class="field">
               <label for="f-invite">邀请码</label>
-              <input id="f-invite" name="invite" type="text" placeholder="如有邀请码请输入（选填）" />
+              <div class="invite">
+                <input id="f-invite" name="invite" type="text" placeholder="如有邀请码请输入（选填）" />
+                <button type="button" class="btn btn--ghost invite__btn" id="inviteBtn">确认</button>
+              </div>
+              <p class="invite__msg" id="inviteMsg" hidden></p>
             </div>
           </div>
 
@@ -278,23 +282,52 @@
               </div>
             </label>
 
+            <!-- 邀请码免费票：填入有效邀请码后才显示 -->
+            <label class="ticket ticket--free" data-ticket="free" id="ticketFree" hidden>
+              <input type="radio" name="ticket" value="free" disabled />
+              <span class="ticket__tag ticket__tag--free">邀请码专享</span>
+              <div class="ticket__body">
+                <div class="ticket__head">
+                  <span class="ticket__name">Invitation Ticket</span>
+                  <div class="ticket__meta">
+                    <span class="ticket__price ticket__price--free">免费</span>
+                    <span class="ticket__check" aria-hidden="true"></span>
+                  </div>
+                </div>
+                <ul class="ticket__list">
+                  <li>邀请码专享 · 无需支付，提交后直接出票</li>
+                  <li>PMI Rising Leader 2026 颁奖典礼席位</li>
+                  <li>全部主题演讲及圆桌论坛</li>
+                </ul>
+              </div>
+            </label>
+
             <div class="reg__summary">
               <div class="reg__total">
                 <span>合计</span>
                 <b id="totalPrice">¥399</b>
               </div>
-              <p class="reg__pay-label">选择支付方式</p>
-              <div class="reg__pay" role="group" aria-label="支付方式">
-                <button type="button" class="btn btn--lg btn--block btn--pay btn--pay-wx" data-pay="wxpay" id="payWx">
-                  <img class="btn__icon" src="assets/icon-wechat-pay.png" alt="" width="28" height="28" decoding="async" />
-                  微信支付
-                </button>
-                <button type="button" class="btn btn--lg btn--block btn--pay btn--pay-ali" data-pay="alipay" id="payAli">
-                  <img class="btn__icon" src="assets/icon-alipay.png" alt="" width="28" height="28" decoding="async" />
-                  支付宝
-                </button>
+              <!-- 普通票：选择支付方式 -->
+              <div class="reg__paywrap" id="payWrap">
+                <p class="reg__pay-label">选择支付方式</p>
+                <div class="reg__pay" role="group" aria-label="支付方式">
+                  <button type="button" class="btn btn--lg btn--block btn--pay btn--pay-wx" data-pay="wxpay" id="payWx">
+                    <img class="btn__icon" src="assets/icon-wechat-pay.png" alt="" width="28" height="28" decoding="async" />
+                    微信支付
+                  </button>
+                  <button type="button" class="btn btn--lg btn--block btn--pay btn--pay-ali" data-pay="alipay" id="payAli">
+                    <img class="btn__icon" src="assets/icon-alipay.png" alt="" width="28" height="28" decoding="async" />
+                    支付宝
+                  </button>
+                </div>
+                <p class="reg__note">请选择支付方式，将跳转至对应收银台完成付款。</p>
               </div>
-              <p class="reg__note">请选择支付方式，将跳转至对应收银台完成付款。</p>
+
+              <!-- 免费票：邀请码专享，免支付直接出票 -->
+              <div class="reg__free" id="freeClaim" hidden>
+                <button type="button" class="btn btn--lg btn--block btn--gradient" id="claimFree">立即领取免费票</button>
+                <p class="reg__note">已使用邀请码 <b id="freeCodeLabel"></b>，无需支付，提交后将直接为您出票。</p>
+              </div>
             </div>
           </div>
         </div>
@@ -347,7 +380,7 @@
   <div class="pay-overlay" id="payOverlay" hidden>
     <div class="pay-overlay__card">
       <div class="spinner" aria-hidden="true"></div>
-      <p>正在跳转至支付页面…</p>
+      <p id="payOverlayTitle">正在跳转至支付页面…</p>
       <small id="payOverlayDetail">请稍候</small>
     </div>
   </div>

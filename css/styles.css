@@ -58,6 +58,9 @@ body {
 
 img { max-width: 100%; display: block; }
 a { color: inherit; text-decoration: none; }
+
+/* hidden 属性需压过 .ticket 等 display 规则，否则免费票会默认露出来 */
+[hidden] { display: none !important; }
 ul { list-style: none; }
 button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
 svg { width: 100%; height: 100%; }
@@ -453,6 +456,14 @@ body::before {
 .field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23b3a0d9' d='M6 8 0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; padding-right: 38px; }
 .field input.is-invalid, .field select.is-invalid { border-color: #ff5470; box-shadow: 0 0 0 3px rgba(255,84,112,.16); }
 
+/* 邀请码：输入框 + 确认按钮 */
+.invite { display: flex; gap: 10px; align-items: stretch; }
+.invite input { flex: 1 1 auto; min-width: 0; }
+.invite__btn { flex: 0 0 auto; padding: 0 22px; }
+.invite__msg { margin-top: 8px; font-size: 12.5px; line-height: 1.5; }
+.invite__msg--ok  { color: #2fe0a6; }
+.invite__msg--err { color: #ff6b8a; }
+
 /* 票种 */
 .reg__tickets { display: flex; flex-direction: column; gap: 16px; }
 .ticket {
@@ -480,6 +491,8 @@ body::before {
   border: 2px solid var(--line-strong); transition: all .25s ease;
 }
 .ticket__tag { position: absolute; top: -10px; left: 22px; padding: 3px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .08em; background: var(--grad-warm); color: #fff; box-shadow: var(--glow); }
+.ticket__tag--free { background: linear-gradient(135deg, #1ac08a, #12a9b8); }
+.ticket__price--free { -webkit-text-fill-color: initial; background: none; color: #2fe0a6; }
 
 .ticket:has(input:checked) { border-color: var(--pink); box-shadow: 0 0 0 1px var(--pink), 0 20px 50px -20px rgba(224,53,154,.6); transform: translateY(-3px); }
 .ticket:has(input:checked) .ticket__check { border-color: var(--pink); background: var(--grad-full); box-shadow: inset 0 0 0 4px var(--card); }
@@ -520,6 +533,7 @@ body::before {
 .reg__total span { font-size: 15px; color: var(--text-soft); }
 .reg__total b { font-size: 30px; font-weight: 800; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .reg__note { margin-top: 14px; font-size: 12.5px; color: var(--text-muted); text-align: center; line-height: 1.6; }
+.reg__free .reg__note b { color: #2fe0a6; font-weight: 700; letter-spacing: .04em; }
 
 /* =========================================================
    页脚
@@ -655,7 +669,7 @@ body::before {
 
 /* 二维码 */
 .qr { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px; border-radius: var(--radius); background: #fff; }
-.qr__code { width: 168px; height: 168px; image-rendering: pixelated; }
+.qr__code { width: 168px; height: 168px; border-radius: 8px; background: #fff; }
 .qr__hint { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #6b4f8a; font-weight: 600; }
 .qr__hint svg { width: 14px; height: 14px; fill: none; stroke: #c2447f; stroke-width: 2; }
 .qr__order { font-size: 12px; color: #9485ad; letter-spacing: .04em; }
@@ -665,6 +679,43 @@ body::before {
 .success__sms svg { flex: 0 0 auto; width: 18px; height: 18px; fill: none; stroke: var(--lavender); stroke-width: 1.7; margin-top: 1px; }
 .success__actions { margin-top: 28px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .success__outro { margin-top: 30px; font-size: 17px; font-weight: 600; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* =========================================================
+   验票页（微信扫一扫）
+   ========================================================= */
+.verify-page { min-height: 100svh; display: flex; align-items: center; justify-content: center; padding: 48px 22px; }
+.verify { width: min(100%, 420px); text-align: center; }
+.verify__brand { font-size: 11px; font-weight: 700; letter-spacing: .18em; color: #9485ad; margin-bottom: 18px; }
+.verify__title { font-size: clamp(24px, 6vw, 34px); font-weight: 800; margin-bottom: 8px; }
+.verify__sub { color: var(--text-soft); font-size: 15px; margin-bottom: 24px; line-height: 1.6; }
+.verify__card {
+  text-align: left;
+  padding: 22px 20px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 50px rgba(0,0,0,.22);
+}
+.verify__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  margin-bottom: 16px;
+}
+.verify__badge--ok { color: #0f5132; background: rgba(25,135,84,.16); border: 1px solid rgba(25,135,84,.28); }
+.verify__badge--bad { color: #842029; background: rgba(220,53,69,.14); border: 1px solid rgba(220,53,69,.24); }
+.verify__rows { display: grid; gap: 12px; }
+.verify__row { display: grid; grid-template-columns: 72px 1fr; gap: 10px; align-items: start; }
+.verify__row--full { grid-template-columns: 1fr; }
+.verify__k { font-size: 12px; color: #9485ad; font-weight: 600; padding-top: 2px; }
+.verify__v { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.5; word-break: break-word; }
+.verify__v--mono { font-size: 13px; font-weight: 500; letter-spacing: .02em; color: var(--text-soft); }
+.verify__note { margin-top: 18px; font-size: 13px; color: var(--text-muted); line-height: 1.6; }
 
 /* =========================================================
    第六屏 互动 · 弹幕墙

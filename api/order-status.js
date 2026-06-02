@@ -2,7 +2,7 @@ const { getOrder, markOrderPaid } = require('./lib/db');
 const { queryZpayOrder } = require('./lib/zpay');
 const { json } = require('./lib/http');
 
-var PAY_LABELS = { wxpay: '微信支付', alipay: '支付宝' };
+var PAY_LABELS = { wxpay: '微信支付', alipay: '支付宝', free: '邀请码免费票' };
 
 async function syncPaidStatus(order) {
   if (!order || order.status === 'paid') return order;
@@ -48,7 +48,7 @@ module.exports = async function handler(req, res) {
       orderId: order.merchant_order_no,
       status: order.status,
       paidSource: order.paid_source || null,
-      paidSourceLabel: order.paid_source === 'notify' ? '支付回调' : (order.paid_source === 'sync' ? '成功页回查' : null),
+      paidSourceLabel: order.paid_source === 'notify' ? '支付回调' : (order.paid_source === 'sync' ? '成功页回查' : (order.paid_source === 'free' ? '邀请码免费票' : null)),
       notifyAt: order.notify_at || null,
       notifyReceived: Boolean(order.notify_at),
       name: order.name,
