@@ -5,7 +5,13 @@
   'use strict';
 
   var params = new URLSearchParams(window.location.search);
-  var orderId = params.get('order') || '';
+  var orderId = params.get('order') || params.get('o') || '';
+
+  // 短链接 /v/订单号（rewrite 后地址栏仍是 /v/...）
+  if (!orderId) {
+    var pathMatch = window.location.pathname.match(/^\/v\/([^/?#]+)/);
+    if (pathMatch) orderId = decodeURIComponent(pathMatch[1]);
+  }
   var titleEl = document.getElementById('verifyTitle');
   var subEl = document.getElementById('verifySub');
   var cardEl = document.getElementById('verifyCard');
