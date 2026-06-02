@@ -260,11 +260,16 @@
     tableWrap.hidden = false;
     statusOrders.textContent = '共 ' + items.length + ' 条订单';
     tbody.innerHTML = items.map(function (o) {
-      var statusClass = o.status === 'paid' ? 'ord-admin__pill--ok' : 'ord-admin__pill--pending';
+      var badge = o.statusBadge || {};
+      var badgeHtml = '';
+      if (badge.show && badge.label) {
+        var variant = badge.variant === 'invite' ? 'invite' : 'paid';
+        badgeHtml = '<span class="ord-admin__pill ord-admin__pill--' + variant + '">' + esc(badge.label) + '</span>';
+      }
       return (
         '<tr>' +
-        '<td data-label="购票人"><span class="ord-admin__name">' + esc(o.name) + '</span>' +
-        '<span class="ord-admin__pill ' + statusClass + '">' + esc(o.statusLabel) + '</span></td>' +
+        '<td data-label="购票人"><div class="ord-admin__name-cell">' +
+        '<span class="ord-admin__name">' + esc(o.name) + '</span>' + badgeHtml + '</div></td>' +
         '<td data-label="公司 · 岗位">' + esc(companyTitle(o)) + '</td>' +
         '<td data-label="票种">' + esc(o.ticketName) + '</td>' +
         '<td data-label="类型">' + esc(o.ticketType) + '</td>' +

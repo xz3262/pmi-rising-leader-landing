@@ -810,13 +810,14 @@ body.nom-admin-detail-open { overflow: hidden; }
 }
 .ord-admin__table tbody tr:last-child td { border-bottom: none; }
 .ord-admin__table tbody tr:hover td { background: rgba(224,53,154,.06); }
-.ord-admin__name { display: block; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.ord-admin__name-cell { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ord-admin__name { font-weight: 700; color: var(--text); }
 .ord-admin__mono { font-size: 12px; font-weight: 500; letter-spacing: .02em; color: var(--text-soft); word-break: break-all; }
 .ord-admin__pill {
   display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
 }
-.ord-admin__pill--ok { color: #0f5132; background: rgba(25,135,84,.16); border: 1px solid rgba(25,135,84,.28); }
-.ord-admin__pill--pending { color: #664d03; background: rgba(255,193,7,.14); border: 1px solid rgba(255,193,7,.28); }
+.ord-admin__pill--paid { color: #0f5132; background: rgba(25,135,84,.16); border: 1px solid rgba(25,135,84,.28); }
+.ord-admin__pill--invite { color: #e8dcff; background: rgba(124,77,187,.22); border: 1px solid rgba(179,160,217,.45); }
 
 @media (max-width: 720px) {
   .ord-admin__table { min-width: 0; }
