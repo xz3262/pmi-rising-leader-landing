@@ -1,7 +1,9 @@
-const { listOrdersForAdmin } = require('./lib/db');
-const { json } = require('./lib/http');
-const { formatStoredChina } = require('./lib/time');
-const { adminKeyOk, adminSecretConfigured } = require('./lib/admin');
+'use strict';
+
+const { listOrdersForAdmin } = require('../db');
+const { json } = require('../http');
+const { formatStoredChina } = require('../time');
+const { adminKeyOk, adminSecretConfigured } = require('../admin');
 
 var TICKET_TYPE_LABELS = {
   standard: '标准票',
@@ -46,11 +48,7 @@ function rowToOrder(row) {
   };
 }
 
-module.exports = async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return json(res, 405, { error: 'Method not allowed' });
-  }
-
+module.exports = async function handleAdminOrders(req, res) {
   if (!adminSecretConfigured()) {
     return json(res, 503, { error: '未配置访问密钥，请在环境变量设置 NOMINEE_ADMIN_SECRET' });
   }
@@ -65,7 +63,7 @@ module.exports = async function handler(req, res) {
       orders: rows.map(rowToOrder)
     });
   } catch (err) {
-    console.error('[orders-admin] read failed', err);
+    console.error('[admin/orders] read failed', err);
     return json(res, 500, { error: '读取失败，请稍后重试' });
   }
 };

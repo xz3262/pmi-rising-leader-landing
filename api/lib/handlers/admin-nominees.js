@@ -1,7 +1,9 @@
-const { listNomineesBrief, getNomineeById } = require('./lib/db');
-const { json } = require('./lib/http');
-const { formatStoredChina } = require('./lib/time');
-const { adminKeyOk, adminSecretConfigured } = require('./lib/admin');
+'use strict';
+
+const { listNomineesBrief, getNomineeById } = require('../db');
+const { json } = require('../http');
+const { formatStoredChina } = require('../time');
+const { adminKeyOk, adminSecretConfigured } = require('../admin');
 
 function rowToBrief(row) {
   return {
@@ -23,10 +25,7 @@ function rowToBrief(row) {
 function rowToDetail(row) {
   var mime = String(row.photo_mime || '').trim() || 'image/jpeg';
   var b64 = String(row.photo_base64 || '').trim();
-  var photoDataUrl = '';
-  if (b64) {
-    photoDataUrl = 'data:' + mime + ';base64,' + b64;
-  }
+  var photoDataUrl = b64 ? 'data:' + mime + ';base64,' + b64 : '';
   return {
     id: Number(row.id),
     name: String(row.name || ''),
@@ -44,11 +43,7 @@ function rowToDetail(row) {
   };
 }
 
-module.exports = async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return json(res, 405, { error: 'Method not allowed' });
-  }
-
+module.exports = async function handleAdminNominees(req, res) {
   if (!adminSecretConfigured()) {
     return json(res, 503, { error: '未配置访问密钥，请在环境变量设置 NOMINEE_ADMIN_SECRET' });
   }
@@ -70,7 +65,7 @@ module.exports = async function handler(req, res) {
       nominees: rows.map(rowToBrief)
     });
   } catch (err) {
-    console.error('[nominees] read failed', err);
+    console.error('[admin/nominees] read failed', err);
     return json(res, 500, { error: '读取失败，请稍后重试' });
   }
 };

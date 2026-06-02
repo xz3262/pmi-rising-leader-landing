@@ -1,30 +1,11 @@
-const { getOrder, markOrderPaid, recordTicketVerification, listTicketVerifications } = require('./lib/db');
-const { queryZpayOrder } = require('./lib/zpay');
-const { json, requestMeta } = require('./lib/http');
-const { formatStoredChina } = require('./lib/time');
+'use strict';
 
-async function syncPaidStatus(order) {
-  if (!order || order.status === 'paid') return order;
-  var zpay = await queryZpayOrder(order.merchant_order_no);
-  if (!zpay || Number(zpay.code) !== 1 || Number(zpay.status) !== 1) return order;
+const { getOrder, recordTicketVerification, listTicketVerifications } = require('../db');
+const { json, requestMeta } = require('../http');
+const { formatStoredChina } = require('../time');
+const { syncPaidStatus } = require('../order-sync');
 
-  var paidAmount = Number(zpay.money);
-  if (Math.abs(paidAmount - Number(order.price)) > 0.001) return order;
-
-  await markOrderPaid(String(order.merchant_order_no), {
-    transaction_no: String(zpay.trade_no || ''),
-    zpay_type: String(zpay.type || ''),
-    paid_money: paidAmount,
-    buyer: String(zpay.buyer || '')
-  }, 'sync');
-  return getOrder(order.merchant_order_no);
-}
-
-module.exports = async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return json(res, 405, { error: 'Method not allowed' });
-  }
-
+module.exports = async function handleVerify(req, res) {
   var merchantOrderNo = String(
     req.query.merchant_order_no || req.query.out_trade_no || req.query.order || req.query.orderId || ''
   ).trim();

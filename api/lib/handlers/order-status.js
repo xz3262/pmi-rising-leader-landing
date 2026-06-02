@@ -1,31 +1,12 @@
-const { getOrder, markOrderPaid } = require('./lib/db');
-const { queryZpayOrder } = require('./lib/zpay');
-const { json } = require('./lib/http');
+'use strict';
+
+const { getOrder } = require('../db');
+const { json } = require('../http');
+const { syncPaidStatus } = require('../order-sync');
 
 var PAY_LABELS = { wxpay: '微信支付', alipay: '支付宝', free: '邀请码免费票' };
 
-async function syncPaidStatus(order) {
-  if (!order || order.status === 'paid') return order;
-  var zpay = await queryZpayOrder(order.merchant_order_no);
-  if (!zpay || Number(zpay.code) !== 1 || Number(zpay.status) !== 1) return order;
-
-  var paidAmount = Number(zpay.money);
-  if (Math.abs(paidAmount - Number(order.price)) > 0.001) return order;
-
-  await markOrderPaid(String(order.merchant_order_no), {
-    transaction_no: String(zpay.trade_no || ''),
-    zpay_type: String(zpay.type || ''),
-    paid_money: paidAmount,
-    buyer: String(zpay.buyer || '')
-  }, 'sync');
-  return getOrder(order.merchant_order_no);
-}
-
-module.exports = async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return json(res, 405, { error: 'Method not allowed' });
-  }
-
+module.exports = async function handleOrderStatus(req, res) {
   var merchantOrderNo = String(
     req.query.merchant_order_no || req.query.out_trade_no || req.query.orderId || ''
   ).trim();

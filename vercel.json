@@ -8,6 +8,10 @@
     { "source": "/orders.html", "destination": "/orders", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/v/:order", "destination": "/verify?order=:order" }
+    { "source": "/v/:order", "destination": "/verify?order=:order" },
+    { "source": "/api/verify", "destination": "/api/order-query?mode=verify" },
+    { "source": "/api/order-status", "destination": "/api/order-query?mode=status" },
+    { "source": "/api/nominees", "destination": "/api/admin?resource=nominees" },
+    { "source": "/api/orders-admin", "destination": "/api/admin?resource=orders" }
   ]
 }
