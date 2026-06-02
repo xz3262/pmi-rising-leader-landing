@@ -28,14 +28,7 @@
 
   function formatDateTime(value) {
     if (!value) return '——';
-    var raw = String(value).trim();
-    var match = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
-    if (!match) return raw;
-    var datePart = parseInt(match[1], 10) + '年' + parseInt(match[2], 10) + '月' + parseInt(match[3], 10) + '日';
-    if (match[4] == null) return datePart;
-    var timePart = match[4] + ':' + match[5];
-    if (match[6] != null) timePart += ':' + match[6];
-    return datePart + ' ' + timePart;
+    return String(value).trim();
   }
 
   function renderVerificationHistory(count, times) {
@@ -104,9 +97,9 @@
       title: '项目总监',
       industry: '科技 / 互联网',
       ticketName: 'Invitation Ticket',
-      orderedAt: '2026-06-02 10:15:00',
+      orderedAt: '2026年6月2日 10:15:00',
       verifyCount: 2,
-      verifications: ['2026-06-02 10:20:00', '2026-06-02 11:34:32']
+      verifications: ['2026年6月2日 10:20:00', '2026年6月2日 11:34:32']
     });
     return;
   }

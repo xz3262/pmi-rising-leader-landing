@@ -1,5 +1,6 @@
 const { createClient } = require('@libsql/client');
 const { env } = require('./zpay');
+const { nowUtcIso } = require('./time');
 
 var client = null;
 var ready = false;
@@ -174,8 +175,8 @@ async function insertOrder(order) {
       INSERT INTO orders (
         merchant_order_no, name, nickname, company, title, phone, email, wechat,
         industry, invite, ticket, ticket_name, product_name, price, pay_method,
-        client_ip, user_agent, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+        client_ip, user_agent, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
     `,
     args: [
       order.merchant_order_no,
@@ -194,7 +195,8 @@ async function insertOrder(order) {
       order.price,
       order.pay_method,
       order.client_ip || '',
-      order.user_agent || ''
+      order.user_agent || '',
+      nowUtcIso()
     ]
   });
 }
@@ -212,8 +214,8 @@ async function markOrderPaid(merchantOrderNo, payment, paidSource) {
           paid_money = ?,
           buyer = ?,
           paid_source = ?,
-          paid_at = ${BEIJING_NOW},
-          notify_at = CASE WHEN ? = 'notify' THEN ${BEIJING_NOW} ELSE notify_at END
+          paid_at = ?,
+          notify_at = CASE WHEN ? = 'notify' THEN ? ELSE notify_at END
       WHERE merchant_order_no = ? AND status = 'pending'
     `,
     args: [
@@ -222,7 +224,9 @@ async function markOrderPaid(merchantOrderNo, payment, paidSource) {
       payment.paid_money != null ? payment.paid_money : null,
       payment.buyer || '',
       source,
+      nowUtcIso(),
       source,
+      nowUtcIso(),
       merchantOrderNo
     ]
   });
@@ -235,10 +239,10 @@ async function recordNotifyReceived(merchantOrderNo) {
   await db.execute({
     sql: `
       UPDATE orders
-      SET notify_at = COALESCE(notify_at, ${BEIJING_NOW})
+      SET notify_at = COALESCE(notify_at, ?)
       WHERE merchant_order_no = ?
     `,
-    args: [merchantOrderNo]
+    args: [nowUtcIso(), merchantOrderNo]
   });
 }
 
@@ -286,13 +290,14 @@ async function recordTicketVerification(merchantOrderNo, meta) {
   var db = getClient();
   await db.execute({
     sql: `
-      INSERT INTO ticket_verifications (merchant_order_no, client_ip, user_agent)
-      VALUES (?, ?, ?)
+      INSERT INTO ticket_verifications (merchant_order_no, client_ip, user_agent, scanned_at)
+      VALUES (?, ?, ?, ?)
     `,
     args: [
       merchantOrderNo,
       meta && meta.clientIp ? meta.clientIp : '',
-      meta && meta.userAgent ? meta.userAgent : ''
+      meta && meta.userAgent ? meta.userAgent : '',
+      nowUtcIso()
     ]
   });
 }

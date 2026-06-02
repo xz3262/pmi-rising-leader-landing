@@ -1,6 +1,7 @@
 const { getOrder, markOrderPaid, recordTicketVerification, listTicketVerifications } = require('./lib/db');
 const { queryZpayOrder } = require('./lib/zpay');
 const { json, requestMeta } = require('./lib/http');
+const { formatStoredChina } = require('./lib/time');
 
 async function syncPaidStatus(order) {
   if (!order || order.status === 'paid') return order;
@@ -56,9 +57,9 @@ module.exports = async function handler(req, res) {
       title: order.title,
       industry: order.industry,
       ticketName: order.ticket_name,
-      orderedAt: order.created_at || null,
+      orderedAt: formatStoredChina(order.created_at),
       verifyCount: verifications.length,
-      verifications: verifications
+      verifications: verifications.map(formatStoredChina)
     });
   } catch (err) {
     console.error('[verify] error', err);
