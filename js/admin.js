@@ -254,7 +254,7 @@
   function renderOrders(items) {
     if (!items.length) {
       tableWrap.hidden = true;
-      statusOrders.textContent = '暂无购票订单';
+      statusOrders.textContent = '暂无已出票订单';
       return;
     }
     tableWrap.hidden = false;
