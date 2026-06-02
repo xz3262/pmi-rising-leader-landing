@@ -19,6 +19,7 @@
   var eticketEl = document.querySelector('.eticket');
   var pollCount = 0;
   var pollMax = 20;
+  var isFreeTicket = sessionData.payMethod === 'free';
 
   function setText(id, txt) {
     var el = document.getElementById(id);
@@ -26,8 +27,12 @@
   }
 
   function showPending() {
-    if (titleEl) titleEl.textContent = '支付确认中…';
-    if (subEl) subEl.textContent = '正在确认您的付款，请稍候';
+    if (titleEl) {
+      titleEl.textContent = isFreeTicket ? '正在为您准备门票…' : '支付确认中…';
+    }
+    if (subEl) {
+      subEl.textContent = isFreeTicket ? '请稍候，即将完成出票' : '正在确认您的付款，请稍候';
+    }
     if (eticketEl) eticketEl.hidden = true;
     if (noteEl) noteEl.hidden = true;
     if (smsEl) smsEl.hidden = true;
@@ -36,8 +41,12 @@
   }
 
   function showError(msg) {
-    if (titleEl) titleEl.textContent = '暂未确认支付';
-    if (subEl) subEl.textContent = msg || '如已完成付款，请稍后再试或联系客服';
+    if (titleEl) titleEl.textContent = isFreeTicket ? '暂未完成出票' : '暂未确认支付';
+    if (subEl) {
+      subEl.textContent = msg || (isFreeTicket
+        ? '请稍后再试或联系客服'
+        : '如已完成付款，请稍后再试或联系客服');
+    }
     if (eticketEl) eticketEl.hidden = true;
     if (noteEl) noteEl.hidden = true;
     if (smsEl) smsEl.hidden = true;
@@ -82,7 +91,9 @@
 
   function fetchOrder() {
     if (!orderId) {
-      showError('未找到订单号，请从报名页重新发起支付');
+      showError(isFreeTicket
+        ? '未找到订单号，请从报名页重新领取免费票'
+        : '未找到订单号，请从报名页重新发起支付');
       return;
     }
 
@@ -90,6 +101,7 @@
       .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
       .then(function (res) {
         if (!res.ok) throw new Error((res.body && res.body.error) || '查询失败');
+        if (res.body.payMethod === 'free') isFreeTicket = true;
         if (res.body.status === 'paid') {
           showTicket(res.body);
           return;
@@ -100,7 +112,9 @@
           window.setTimeout(fetchOrder, 2000);
           return;
         }
-        showError('支付结果尚未同步，如已付款请刷新页面');
+        showError(isFreeTicket
+          ? '出票结果尚未同步，请刷新页面'
+          : '支付结果尚未同步，如已付款请刷新页面');
       })
       .catch(function (err) {
         showError(err.message || '查询失败，请稍后刷新');

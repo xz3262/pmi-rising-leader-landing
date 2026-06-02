@@ -313,6 +313,11 @@
     // 阻止回车误提交（须点击支付方式按钮）
     form.addEventListener('submit', function (e) { e.preventDefault(); });
 
+    // 从 Z-Pay 未付款回退时，浏览器会恢复离开前的页面快照（遮罩仍显示），需手动关闭
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted && overlay) overlay.hidden = true;
+    });
+
     // 实时清除错误态
     form.addEventListener('input', function (e) {
       if (e.target.classList.contains('is-invalid')) e.target.classList.remove('is-invalid');
@@ -380,8 +385,8 @@
 
     if (overlay) {
       overlay.hidden = false;
-      setOverlayTitle('正在为您出票…');
-      if (overlayDetail) overlayDetail.textContent = data.ticketName + ' · 免费（邀请码）';
+      setOverlayTitle('正在为您准备门票…');
+      if (overlayDetail) overlayDetail.textContent = data.ticketName + ' · 免费（邀请码） · 请稍候';
     }
 
     fetch('/api/order', {
