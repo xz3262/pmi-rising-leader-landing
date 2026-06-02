@@ -57,11 +57,13 @@
           </div>
 
           <div class="qr">
-            <canvas class="qr__code" id="qrCanvas" width="168" height="168" aria-label="验票二维码"></canvas>
+            <canvas class="qr__code" id="qrCanvas" width="200" height="200" aria-label="验票二维码"></canvas>
             <div class="qr__hint">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 3 5v6c0 5 3.8 9.4 9 11 5.2-1.6 9-6 9-11V5z"/></svg>
-              <span>现场验票二维码 · 微信扫一扫</span>
+              <span>请用微信右上角「扫一扫」对准本二维码</span>
             </div>
+            <p class="qr__tip">勿长按图片识别；扫不出可点下方链接打开验票页</p>
+            <a class="qr__link" id="qrLink" href="#" hidden>打开验票链接</a>
             <div class="qr__order" id="qrOrder">订单号 ——</div>
           </div>
         </div>

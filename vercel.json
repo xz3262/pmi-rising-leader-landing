@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/v/:order", "destination": "/verify.html?order=:order" }
+  ]
+}

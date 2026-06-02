@@ -20,7 +20,7 @@ module.exports = async function handler(req, res) {
       type: 'png',
       width: width,
       margin: 2,
-      errorCorrectionLevel: 'M',
+      errorCorrectionLevel: 'H',
       color: {
         dark: '#1a1033',
         light: '#ffffff'

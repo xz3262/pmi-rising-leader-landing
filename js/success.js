@@ -67,8 +67,9 @@
     var canvas = document.getElementById('qrCanvas');
     if (!canvas || !ticketOrderId) return;
 
-    var verifyUrl = window.location.origin + '/verify.html?order=' + encodeURIComponent(ticketOrderId);
-    var displayPx = 168;
+    // 短链接 /v/订单号：二维码更简单，微信更容易识别
+    var verifyUrl = window.location.origin + '/v/' + encodeURIComponent(ticketOrderId);
+    var displayPx = 200;
     var dpr = Math.min(window.devicePixelRatio || 2, 3);
     var renderPx = Math.round(displayPx * dpr);
 
@@ -78,6 +79,13 @@
     img.decoding = 'sync';
     img.src = '/api/qr?w=' + renderPx + '&data=' + encodeURIComponent(verifyUrl);
     canvas.replaceWith(img);
+
+    var linkEl = document.getElementById('qrLink');
+    if (linkEl) {
+      linkEl.href = verifyUrl;
+      linkEl.textContent = verifyUrl.replace(/^https?:\/\//, '');
+      linkEl.hidden = false;
+    }
   }
 
   function fetchOrder() {
