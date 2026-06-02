@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#120c24" />
+  <title>报名成功 · PMI Rising Leader 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <main class="success-page">
+    <div class="success">
+      <div class="success__check">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <h1 class="success__title">报名成功</h1>
+      <p class="success__sub">感谢报名 <b>PMI Rising Leader 2026</b></p>
+
+      <!-- 报名成功活动信息票券（含二维码，现场验票） -->
+      <div class="eticket">
+        <div class="eticket__top">
+          <div class="eticket__brand">PMI RISING LEADER 2026</div>
+          <div class="eticket__event">中国新锐项目管理精英大会</div>
+          <span class="eticket__type" id="etType">Standard Ticket</span>
+        </div>
+        <div class="eticket__perf"></div>
+        <div class="eticket__body">
+          <div class="eticket__rows">
+            <div class="eticket__row">
+              <div class="eticket__k">日期</div>
+              <div class="eticket__v">2026年6月27日</div>
+            </div>
+            <div class="eticket__row">
+              <div class="eticket__k">时间</div>
+              <div class="eticket__v">13:00 起</div>
+            </div>
+            <div class="eticket__row eticket__row--full">
+              <div class="eticket__k">地点</div>
+              <div class="eticket__v">苏州园区香格里拉大酒店</div>
+            </div>
+            <div class="eticket__row">
+              <div class="eticket__k">参会人</div>
+              <div class="eticket__v" id="etName">——</div>
+            </div>
+            <div class="eticket__row">
+              <div class="eticket__k">单位</div>
+              <div class="eticket__v" id="etCompany">——</div>
+            </div>
+          </div>
+
+          <div class="qr">
+            <canvas class="qr__code" id="qrCanvas" width="33" height="33" aria-label="验票二维码"></canvas>
+            <div class="qr__hint">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 3 5v6c0 5 3.8 9.4 9 11 5.2-1.6 9-6 9-11V5z"/></svg>
+              <span>现场验票二维码 · 仅可扫描一次</span>
+            </div>
+            <div class="qr__order" id="qrOrder">订单号 ——</div>
+          </div>
+        </div>
+      </div>
+
+      <p class="success__note">
+        请截图保存本页二维码，于 <b>2026年6月27日</b> 现场签到验票。
+      </p>
+
+      <div class="success__sms">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H7l-3 3z"/></svg>
+        <span>报名确认短信将发送至您填写的手机号；活动前 3 天与前 1 天，我们还会短信发送行前须知，请注意查收。</span>
+      </div>
+
+      <div class="success__actions">
+        <a href="index.html" class="btn btn--ghost">返回首页</a>
+        <a href="index.html#agenda" class="btn btn--gradient">查看议程</a>
+      </div>
+
+      <p class="success__outro">期待与您在苏州相见。</p>
+    </div>
+  </main>
+
+  <script src="js/success.js"></script>
+</body>
+</html>
