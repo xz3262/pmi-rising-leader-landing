@@ -3,6 +3,7 @@ const { env } = require('./zpay');
 
 var client = null;
 var ready = false;
+var BEIJING_NOW = "datetime('now', '+8 hours')";
 
 function getClient() {
   if (client) return client;
@@ -13,6 +14,13 @@ function getClient() {
   }
   client = createClient({ url: url, authToken: authToken });
   return client;
+}
+
+async function getTableColumns(db, table) {
+  var result = await db.execute('PRAGMA table_info(' + table + ')');
+  return result.rows.map(function (row) {
+    return String(row.name || row[1] || '');
+  });
 }
 
 async function addColumnIfMissing(db, table, column, definition) {
@@ -26,14 +34,62 @@ async function addColumnIfMissing(db, table, column, definition) {
   }
 }
 
+async function renameColumnIfExists(db, table, oldName, newName) {
+  if (oldName === newName) return;
+  var columns = await getTableColumns(db, table);
+  if (columns.indexOf(oldName) === -1 || columns.indexOf(newName) !== -1) return;
+  await db.execute('ALTER TABLE ' + table + ' RENAME COLUMN ' + oldName + ' TO ' + newName);
+}
+
+async function dropColumnIfExists(db, table, column) {
+  var columns = await getTableColumns(db, table);
+  if (columns.indexOf(column) === -1) return;
+  await db.execute('ALTER TABLE ' + table + ' DROP COLUMN ' + column);
+}
+
+async function runMigrationOnce(db, name, fn) {
+  await db.execute('CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY)');
+  var existing = await db.execute({
+    sql: 'SELECT 1 AS ok FROM schema_migrations WHERE name = ? LIMIT 1',
+    args: [name]
+  });
+  if (existing.rows.length) return;
+  await fn();
+  await db.execute({
+    sql: 'INSERT INTO schema_migrations (name) VALUES (?)',
+    args: [name]
+  });
+}
+
+async function migrateOrdersSchema(db) {
+  await renameColumnIfExists(db, 'orders', 'out_trade_no', 'merchant_order_no');
+  await renameColumnIfExists(db, 'orders', 'trade_no', 'transaction_no');
+
+  await addColumnIfMissing(db, 'orders', 'nickname', 'TEXT');
+  await addColumnIfMissing(db, 'orders', 'product_name', 'TEXT');
+  await addColumnIfMissing(db, 'orders', 'paid_money', 'REAL');
+  await addColumnIfMissing(db, 'orders', 'buyer', 'TEXT');
+  await addColumnIfMissing(db, 'orders', 'client_ip', 'TEXT');
+  await addColumnIfMissing(db, 'orders', 'user_agent', 'TEXT');
+  await addColumnIfMissing(db, 'orders', 'paid_source', 'TEXT');
+  await addColumnIfMissing(db, 'orders', 'notify_at', 'TEXT');
+
+  await runMigrationOnce(db, 'timestamps_to_beijing_v1', async function () {
+    await db.execute("UPDATE orders SET created_at = datetime(created_at, '+8 hours') WHERE created_at IS NOT NULL AND created_at != ''");
+    await db.execute("UPDATE orders SET paid_at = datetime(paid_at, '+8 hours') WHERE paid_at IS NOT NULL AND paid_at != ''");
+    await db.execute("UPDATE nominees SET created_at = datetime(created_at, '+8 hours') WHERE created_at IS NOT NULL AND created_at != ''");
+    await db.execute("UPDATE barrage_messages SET created_at = datetime(created_at, '+8 hours') WHERE created_at IS NOT NULL AND created_at != ''");
+  });
+}
+
 async function ensureSchema() {
   if (ready) return;
   var db = getClient();
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS orders (
-      out_trade_no TEXT PRIMARY KEY,
-      trade_no TEXT,
+      merchant_order_no TEXT PRIMARY KEY,
+      transaction_no TEXT,
       name TEXT NOT NULL,
       nickname TEXT,
       company TEXT NOT NULL,
@@ -54,16 +110,14 @@ async function ensureSchema() {
       buyer TEXT,
       client_ip TEXT,
       user_agent TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      paid_source TEXT,
+      notify_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (${BEIJING_NOW}),
       paid_at TEXT
     )
   `);
 
-  await addColumnIfMissing(db, 'orders', 'product_name', 'TEXT');
-  await addColumnIfMissing(db, 'orders', 'paid_money', 'REAL');
-  await addColumnIfMissing(db, 'orders', 'buyer', 'TEXT');
-  await addColumnIfMissing(db, 'orders', 'client_ip', 'TEXT');
-  await addColumnIfMissing(db, 'orders', 'user_agent', 'TEXT');
+  await migrateOrdersSchema(db);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS nominees (
@@ -80,7 +134,7 @@ async function ensureSchema() {
       photo_base64 TEXT,
       client_ip TEXT,
       user_agent TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      created_at TEXT NOT NULL DEFAULT (${BEIJING_NOW})
     )
   `);
 
@@ -91,7 +145,7 @@ async function ensureSchema() {
       agreed_terms INTEGER NOT NULL DEFAULT 1,
       client_ip TEXT,
       user_agent TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      created_at TEXT NOT NULL DEFAULT (${BEIJING_NOW})
     )
   `);
 
@@ -104,13 +158,13 @@ async function insertOrder(order) {
   await db.execute({
     sql: `
       INSERT INTO orders (
-        out_trade_no, name, nickname, company, title, phone, email, wechat,
+        merchant_order_no, name, nickname, company, title, phone, email, wechat,
         industry, invite, ticket, ticket_name, product_name, price, pay_method,
         client_ip, user_agent, status
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
     `,
     args: [
-      order.out_trade_no,
+      order.merchant_order_no,
       order.name,
       order.nickname || '',
       order.company,
@@ -131,37 +185,55 @@ async function insertOrder(order) {
   });
 }
 
-async function markOrderPaid(outTradeNo, payment) {
+async function markOrderPaid(merchantOrderNo, payment, paidSource) {
   await ensureSchema();
   var db = getClient();
+  var source = paidSource === 'notify' ? 'notify' : 'sync';
   var result = await db.execute({
     sql: `
       UPDATE orders
       SET status = 'paid',
-          trade_no = ?,
+          transaction_no = ?,
           zpay_type = ?,
           paid_money = ?,
           buyer = ?,
-          paid_at = datetime('now')
-      WHERE out_trade_no = ? AND status = 'pending'
+          paid_source = ?,
+          paid_at = ${BEIJING_NOW},
+          notify_at = CASE WHEN ? = 'notify' THEN ${BEIJING_NOW} ELSE notify_at END
+      WHERE merchant_order_no = ? AND status = 'pending'
     `,
     args: [
-      payment.trade_no || '',
+      payment.transaction_no || '',
       payment.zpay_type || '',
       payment.paid_money != null ? payment.paid_money : null,
       payment.buyer || '',
-      outTradeNo
+      source,
+      source,
+      merchantOrderNo
     ]
   });
   return result.rowsAffected > 0;
 }
 
-async function getOrder(outTradeNo) {
+async function recordNotifyReceived(merchantOrderNo) {
+  await ensureSchema();
+  var db = getClient();
+  await db.execute({
+    sql: `
+      UPDATE orders
+      SET notify_at = COALESCE(notify_at, ${BEIJING_NOW})
+      WHERE merchant_order_no = ?
+    `,
+    args: [merchantOrderNo]
+  });
+}
+
+async function getOrder(merchantOrderNo) {
   await ensureSchema();
   var db = getClient();
   var result = await db.execute({
-    sql: 'SELECT * FROM orders WHERE out_trade_no = ? LIMIT 1',
-    args: [outTradeNo]
+    sql: 'SELECT * FROM orders WHERE merchant_order_no = ? LIMIT 1',
+    args: [merchantOrderNo]
   });
   if (!result.rows.length) return null;
   return result.rows[0];
@@ -217,6 +289,7 @@ module.exports = {
   ensureSchema,
   insertOrder,
   markOrderPaid,
+  recordNotifyReceived,
   getOrder,
   insertNominee,
   insertBarrageMessage

@@ -58,7 +58,7 @@
     setText('etName', order.name || '——');
     setText('etCompany', order.company || '——');
     setText('etPay', order.payMethodLabel || '——');
-    setText('qrOrder', '订单号 ' + (order.orderId || orderId));
+    setText('qrOrder', '商户单号 ' + (order.merchantOrderNo || order.orderId || orderId));
     drawPlaceholderQR('qrCanvas', order.orderId || orderId);
   }
 

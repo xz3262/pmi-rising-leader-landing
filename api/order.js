@@ -64,7 +64,7 @@ module.exports = async function handler(req, res) {
 
   try {
     await insertOrder({
-      out_trade_no: outTradeNo,
+      merchant_order_no: outTradeNo,
       name: String(body.name).trim(),
       nickname: String(body.nickname || '').trim(),
       company: String(body.company).trim(),

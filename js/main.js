@@ -16,9 +16,10 @@
   ];
   var SURNAMES = ['李','王','张','刘','陈','杨','赵','黄','周','吴','徐','孙','马','朱','胡','林','何','高','罗','郑','梁','谢','宋','唐','许','韩','冯','邓','曹','彭'];
   var ROLES = ['项目总监','研发负责人','产品总监','运营总监','技术VP','创新负责人','交付总监','战略总监'];
-  var HERO_WALL_POSTERS = [
-    'assets/hero-wall-rising-100.png',
-    'assets/hero-wall-blank.png'
+  // Hero 海报墙：PMI logo 与 Rising 100 海报，交替铺在品牌渐变卡片上
+  var HERO_WALL_MARKS = [
+    { img: 'assets/logo-pmi.png',             kind: 'logo',   label: 'PMI' },
+    { img: 'assets/hero-wall-rising-100.png', kind: 'rising', label: 'Rising 100' }
   ];
 
   function pick(arr, i) { return arr[i % arr.length]; }
@@ -54,11 +55,16 @@
   }
 
   function makePoster(n) {
+    var mark = pick(HERO_WALL_MARKS, n);          // 按序号交替 logo / Rising 100
     var el = document.createElement('div');
-    el.className = 'poster poster--image';
-    el.style.backgroundImage = "url('" + assetUrl(pick(HERO_WALL_POSTERS, n)) + "')";
+    el.className = 'poster poster--brand';
+    el.style.backgroundImage = pick(GRADIENTS, n); // 品牌渐变底，循环上色
+    var face = document.createElement('span');
+    face.className = 'poster__mark poster__mark--' + mark.kind;
+    face.style.backgroundImage = "url('" + assetUrl(mark.img) + "')";
+    el.appendChild(face);
     el.setAttribute('role', 'img');
-    el.setAttribute('aria-label', (n % 2 === 1) ? 'Rising 100' : 'PMI Rising Leader');
+    el.setAttribute('aria-label', mark.label);
     return el;
   }
 

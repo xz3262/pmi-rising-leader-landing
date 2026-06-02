@@ -1,5 +1,5 @@
 const { verifySign, env, queryZpayOrder } = require('./lib/zpay');
-const { getOrder, markOrderPaid } = require('./lib/db');
+const { getOrder, markOrderPaid, recordNotifyReceived } = require('./lib/db');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') {
@@ -30,40 +30,52 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  var merchantOrderNo = String(params.out_trade_no);
+
   try {
-    var order = await getOrder(String(params.out_trade_no));
+    var order = await getOrder(merchantOrderNo);
     if (!order) {
-      console.error('[notify] order not found', params.out_trade_no);
+      console.error('[notify] order not found', merchantOrderNo);
       res.status(404).end('fail');
       return;
     }
 
     var paidAmount = Number(params.money);
     if (Math.abs(paidAmount - Number(order.price)) > 0.001) {
-      console.error('[notify] amount mismatch', params.out_trade_no, paidAmount, order.price);
+      console.error('[notify] amount mismatch', merchantOrderNo, paidAmount, order.price);
       res.status(400).end('fail');
       return;
     }
 
+    var payment = {
+      transaction_no: String(params.trade_no || ''),
+      zpay_type: String(params.type || ''),
+      paid_money: paidAmount,
+      buyer: String(params.buyer || '')
+    };
+
     if (order.status !== 'paid') {
-      var updated = await markOrderPaid(String(params.out_trade_no), {
-        trade_no: String(params.trade_no || ''),
-        zpay_type: String(params.type || ''),
-        paid_money: paidAmount,
-        buyer: String(params.buyer || '')
-      });
+      var updated = await markOrderPaid(merchantOrderNo, payment, 'notify');
       if (!updated) {
-        var zpay = await queryZpayOrder(String(params.out_trade_no));
+        var zpay = await queryZpayOrder(merchantOrderNo);
         if (zpay && Number(zpay.status) === 1) {
-          await markOrderPaid(String(params.out_trade_no), {
-            trade_no: String(zpay.trade_no || params.trade_no || ''),
+          await markOrderPaid(merchantOrderNo, {
+            transaction_no: String(zpay.trade_no || params.trade_no || ''),
             zpay_type: String(zpay.type || params.type || ''),
             paid_money: Number(zpay.money || paidAmount),
             buyer: String(zpay.buyer || params.buyer || '')
-          });
+          }, 'notify');
         }
       }
+    } else {
+      await recordNotifyReceived(merchantOrderNo);
     }
+
+    order = await getOrder(merchantOrderNo);
+    console.log('[notify] ok', merchantOrderNo, {
+      paidSource: order && order.paid_source,
+      notifyAt: order && order.notify_at
+    });
 
     res.status(200).setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.end('success');
