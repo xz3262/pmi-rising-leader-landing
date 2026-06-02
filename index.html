@@ -25,6 +25,7 @@
         <a href="#companies">参会企业</a>
         <a href="#agenda">议程</a>
         <a href="#register">报名</a>
+        <a href="#interaction">互动</a>
       </nav>
       <a href="#register" class="btn btn--sm btn--gradient nav__cta">立即报名</a>
       <button class="nav__toggle" id="navToggle" aria-label="菜单" aria-expanded="false">
@@ -67,7 +68,8 @@
         </div>
       </div>
       <div class="hero__actions">
-        <a href="#register" class="btn btn--lg btn--gradient">立即报名</a>
+        <button type="button" class="btn btn--lg btn--gradient" data-nominee-open>我是 Nominee</button>
+        <a href="#register" class="btn btn--lg btn--ghost">我要报名</a>
         <a href="#agenda" class="btn btn--lg btn--ghost">查看议程</a>
       </div>
     </div>
@@ -149,9 +151,15 @@
           <!-- 左：报名信息 -->
           <div class="reg__info card">
             <h3 class="card__title">报名信息</h3>
-            <div class="field">
-              <label for="f-name">姓名 <i>*</i></label>
-              <input id="f-name" name="name" type="text" autocomplete="name" required placeholder="请输入您的姓名" />
+            <div class="field-row">
+              <div class="field">
+                <label for="f-name">姓名 <i>*</i></label>
+                <input id="f-name" name="name" type="text" autocomplete="name" required placeholder="请输入您的姓名" />
+              </div>
+              <div class="field">
+                <label for="f-nickname">昵称</label>
+                <input id="f-nickname" name="nickname" type="text" placeholder="希望我们怎么称呼你" />
+              </div>
             </div>
             <div class="field-row">
               <div class="field">
@@ -267,6 +275,30 @@
     </div>
   </section>
 
+  <!-- ===== 第六屏 互动（弹幕墙） ===== -->
+  <section class="section interaction" id="interaction">
+    <div class="container">
+      <div class="section__head">
+        <span class="section__kicker">Wall of Voices</span>
+        <h2 class="section__title">一段话，诠释项目管理人生</h2>
+        <p class="section__sub">写下你的项目管理感悟，让它出现在大会现场的弹幕墙上</p>
+      </div>
+
+      <div class="barrage" id="barrage">
+        <div class="barrage__stage" id="barrageStage" aria-label="项目管理人生弹幕墙"><!-- JS 注入气泡 --></div>
+        <span class="barrage__fade barrage__fade--l" aria-hidden="true"></span>
+        <span class="barrage__fade barrage__fade--r" aria-hidden="true"></span>
+      </div>
+
+      <form class="barrage__compose" id="barrageForm" autocomplete="off">
+        <input class="barrage__input" id="barrageInput" type="text" maxlength="50"
+               placeholder="用一句话，写下你的项目管理人生…" aria-label="输入你的一段话" />
+        <button type="submit" class="btn btn--gradient barrage__send">发送</button>
+      </form>
+      <p class="barrage__tip">已发布 <b id="barrageCount">0</b> 条 · 鼠标悬停弹幕可暂停查看</p>
+    </div>
+  </section>
+
   <!-- ===== 页脚 ===== -->
   <footer class="footer">
     <div class="container footer__inner">
@@ -290,6 +322,125 @@
       <div class="spinner" aria-hidden="true"></div>
       <p>正在跳转至支付页面…</p>
       <small id="payOverlayDetail">请稍候</small>
+    </div>
+  </div>
+
+  <!-- 弹幕发送确认弹窗 -->
+  <div class="modal" id="sendModal" hidden>
+    <div class="modal__mask" data-send-close></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="sendModalTitle">
+      <button class="modal__x" type="button" aria-label="关闭" data-send-close>&times;</button>
+      <h3 class="modal__title" id="sendModalTitle">发送你的一段话</h3>
+      <p class="modal__preview" id="sendPreview"></p>
+      <label class="modal__agree" for="sendAgree">
+        <input type="checkbox" id="sendAgree" />
+        <span class="modal__agree-box" aria-hidden="true"></span>
+        <span>我已知晓并同意所发送内容用于 PMI 大会宣传</span>
+      </label>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" data-send-close>取消</button>
+        <button type="button" class="btn btn--gradient" id="sendConfirm" disabled>确认发送</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nominee 获奖流程弹窗（多步） -->
+  <div class="modal nominee" id="nomineeModal" hidden>
+    <div class="modal__mask" data-nominee-close></div>
+    <div class="modal__panel nominee__panel" role="dialog" aria-modal="true" aria-labelledby="nomineeTitle">
+      <button class="modal__x" type="button" aria-label="关闭" data-nominee-close>&times;</button>
+
+      <!-- 进度点 -->
+      <div class="nominee__dots" aria-hidden="true">
+        <span class="is-active"></span><span></span><span></span><span></span>
+      </div>
+
+      <!-- Step 1：恭喜获奖 -->
+      <div class="nstep is-active" data-step="1">
+        <div class="nstep__badge nstep__badge--trophy">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v3a6 6 0 0 1-12 0V4Z"/><path d="M6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3"/><path d="M12 13v4M8 21h8M9.5 21l.5-4M14.5 21l-.5-4"/></svg>
+        </div>
+        <h3 class="nstep__title" id="nomineeTitle">恭喜您获得<br />2026 PMI 中国新锐项目管理精英奖！</h3>
+        <p class="nstep__text">每一个成功项目的背后，都凝聚着项目团队的专业、坚持与创新。感谢您以卓越实践推动项目管理价值落地，也期待在 PMI 中国项目管理大会现场，与您共同见证这一荣誉时刻。</p>
+        <button type="button" class="btn btn--lg btn--gradient btn--block" data-nominee-next>确认</button>
+      </div>
+
+      <!-- Step 2：荣誉时刻 -->
+      <div class="nstep" data-step="2">
+        <div class="nstep__badge nstep__badge--gift">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8H4v3h16zM12 8v13M4 11v9a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-9"/><path d="M12 8S10.5 3 8 3 5 6.5 12 8ZM12 8s1.5-5 4-5 3 3.5-4 5Z"/></svg>
+        </div>
+        <h3 class="nstep__title">荣誉时刻，即将开启</h3>
+        <p class="nstep__text">Nominee 将会收到神秘包裹，欢迎记录你的惊喜时刻 ✨</p>
+        <button type="button" class="btn btn--lg btn--gradient btn--block" data-nominee-next>下一步</button>
+      </div>
+
+      <!-- Step 3：注册信息 -->
+      <div class="nstep nstep--form" data-step="3">
+        <h3 class="nstep__title nstep__title--sm">完善获奖者信息</h3>
+        <p class="nstep__sub">用于制作获奖证书与寄送神秘包裹</p>
+        <form class="nform" id="nomineeForm" novalidate>
+          <div class="nform__photo">
+            <label class="photo-up" for="n-photo">
+              <input id="n-photo" name="photo" type="file" accept="image/*" />
+              <span class="photo-up__preview" id="photoPreview" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 20a8 8 0 0 1 16 0"/></svg>
+              </span>
+              <span class="photo-up__text">上传个人照片</span>
+            </label>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="n-name">姓名 <i>*</i></label>
+              <input id="n-name" name="name" type="text" required placeholder="您的姓名" />
+            </div>
+            <div class="field">
+              <label for="n-nickname">昵称</label>
+              <input id="n-nickname" name="nickname" type="text" placeholder="希望我们怎么称呼你" />
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="n-company">企业 / 公司 <i>*</i></label>
+              <input id="n-company" name="company" type="text" required placeholder="公司名称" />
+            </div>
+            <div class="field">
+              <label for="n-title">职务 <i>*</i></label>
+              <input id="n-title" name="title" type="text" required placeholder="您的职务" />
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="n-phone">联系方式 <i>*</i></label>
+              <input id="n-phone" name="phone" type="tel" inputmode="numeric" required maxlength="11" placeholder="11 位手机号" />
+            </div>
+            <div class="field">
+              <label for="n-email">邮箱 <i>*</i></label>
+              <input id="n-email" name="email" type="email" required placeholder="name@example.com" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="n-wechat">微信号</label>
+            <input id="n-wechat" name="wechat" type="text" placeholder="微信号（选填）" />
+          </div>
+          <div class="field">
+            <label for="n-address">收件地址 <i>*</i></label>
+            <textarea id="n-address" name="address" rows="2" required placeholder="用于寄送神秘包裹，请填写详细收件地址"></textarea>
+          </div>
+          <button type="submit" class="btn btn--lg btn--gradient btn--block">提交信息</button>
+        </form>
+      </div>
+
+      <!-- Step 4：感谢 -->
+      <div class="nstep nstep--thanks" data-step="4">
+        <div class="success__check">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h3 class="nstep__title">感谢填写！</h3>
+        <p class="nstep__text">期待与您在 PMI Rising Leader 2026 见面！</p>
+        <p class="nstep__meta">2026 年 6 月 27 日 · 苏州园区香格里拉大酒店</p>
+        <button type="button" class="btn btn--lg btn--gradient btn--block" data-nominee-close>完成</button>
+      </div>
     </div>
   </div>
 

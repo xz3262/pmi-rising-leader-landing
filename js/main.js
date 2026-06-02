@@ -235,8 +235,8 @@
     required.forEach(function (el) {
       var v = (el.value || '').trim();
       var invalid = !v;
-      if (!invalid && el.id === 'f-phone') invalid = !/^1\d{10}$/.test(v);
-      if (!invalid && el.id === 'f-email') invalid = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      if (!invalid && (el.type === 'tel' || el.name === 'phone')) invalid = !/^1\d{10}$/.test(v);
+      if (!invalid && (el.type === 'email' || el.name === 'email')) invalid = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
       el.classList.toggle('is-invalid', invalid);
       if (invalid) ok = false;
     });
@@ -249,6 +249,7 @@
     var method = payMethod === 'alipay' ? 'alipay' : 'wxpay';
     return {
       name: form.name.value.trim(),
+      nickname: form.nickname ? form.nickname.value.trim() : '',
       company: form.company.value.trim(),
       title: form.title.value.trim(),
       phone: form.phone.value.trim(),

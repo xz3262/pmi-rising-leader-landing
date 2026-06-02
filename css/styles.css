@@ -601,3 +601,178 @@ body::before {
 .success__sms svg { flex: 0 0 auto; width: 18px; height: 18px; fill: none; stroke: var(--lavender); stroke-width: 1.7; margin-top: 1px; }
 .success__actions { margin-top: 28px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .success__outro { margin-top: 30px; font-size: 17px; font-weight: 600; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* =========================================================
+   第六屏 互动 · 弹幕墙
+   ========================================================= */
+.interaction { overflow: hidden; }
+
+.barrage {
+  position: relative;
+  margin-bottom: 30px;
+  padding-block: 6px;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+          mask: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+}
+.barrage__stage { display: flex; flex-direction: column; gap: 16px; }
+
+.barrage__row { display: flex; width: max-content; animation: barrageScroll 46s linear infinite; will-change: transform; }
+.barrage__row--rev   { animation-direction: reverse; }
+.barrage__row--slow  { animation-duration: 64s; }
+.barrage__row--fast  { animation-duration: 38s; }
+.barrage:hover .barrage__row { animation-play-state: paused; }
+.barrage__group { display: flex; flex: 0 0 auto; }
+@keyframes barrageScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+.bubble {
+  flex: 0 0 auto; margin-right: 16px;
+  display: inline-flex; align-items: baseline; gap: 9px;
+  max-width: 70vw;
+  padding: 12px 20px; border-radius: 999px;
+  font-size: 14.5px; line-height: 1.4; white-space: nowrap;
+  background: linear-gradient(165deg, rgba(42,28,94,.66), rgba(29,19,64,.5));
+  border: 1px solid var(--line-strong);
+  color: var(--text-soft);
+}
+.bubble__txt { color: var(--text); font-weight: 500; }
+.bubble__who { font-size: 12.5px; color: var(--lavender); opacity: .85; }
+.bubble__who::before { content: "— "; }
+.bubble--t0 { border-color: rgba(255,107,61,.5);  box-shadow: 0 0 22px -10px rgba(255,107,61,.55); }
+.bubble--t1 { border-color: rgba(224,53,154,.5);  box-shadow: 0 0 22px -10px rgba(224,53,154,.55); }
+.bubble--t2 { border-color: rgba(124,77,187,.5);  box-shadow: 0 0 22px -10px rgba(124,77,187,.55); }
+.bubble--t3 { border-color: rgba(77,110,245,.5);  box-shadow: 0 0 22px -10px rgba(77,110,245,.55); }
+.bubble--mine {
+  background: var(--grad-full); background-size: 180% 180%; animation: btnShift 6s ease infinite;
+  border-color: transparent; box-shadow: 0 10px 30px -10px rgba(224,53,154,.6);
+}
+.bubble--mine .bubble__txt, .bubble--mine .bubble__who { color: #fff; }
+.bubble--mine .bubble__who { opacity: .92; }
+
+/* 输入区 */
+.barrage__compose {
+  display: flex; gap: 12px; align-items: stretch;
+  max-width: 640px; margin: 0 auto;
+}
+.barrage__input {
+  flex: 1 1 auto; min-width: 0;
+  padding: 15px 22px; border-radius: 999px;
+  background: rgba(16,10,34,.6); border: 1px solid var(--line-strong); color: var(--text);
+  font-size: 15px; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.barrage__input::placeholder { color: #6f6594; }
+.barrage__input:focus { outline: none; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255,77,141,.18); background: rgba(16,10,34,.85); }
+.barrage__send { flex: 0 0 auto; }
+.barrage__tip { margin-top: 16px; text-align: center; font-size: 13px; color: var(--text-muted); }
+.barrage__tip b { color: var(--text-soft); font-weight: 700; }
+
+/* =========================================================
+   通用弹窗 Modal
+   ========================================================= */
+.modal { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 22px; }
+.modal[hidden] { display: none; }
+.modal__mask { position: absolute; inset: 0; background: rgba(8,4,20,.78); backdrop-filter: blur(8px); animation: maskIn .25s ease both; }
+.modal__panel {
+  position: relative; z-index: 1; width: 100%; max-width: 460px;
+  background: linear-gradient(165deg, rgba(34,22,81,.97), rgba(22,14,46,.96));
+  border: 1px solid var(--line-strong); border-radius: var(--radius-lg);
+  padding: 34px 32px 30px; box-shadow: var(--shadow);
+  animation: panelIn .32s cubic-bezier(.2,.9,.3,1.2) both;
+  max-height: calc(100svh - 44px); overflow-y: auto;
+}
+@keyframes maskIn { from { opacity: 0; } }
+@keyframes panelIn { from { opacity: 0; transform: translateY(16px) scale(.96); } }
+.modal__x {
+  position: absolute; top: 14px; right: 16px; width: 34px; height: 34px;
+  font-size: 24px; line-height: 1; color: var(--text-muted); border-radius: 50%;
+  display: grid; place-items: center; transition: background .2s ease, color .2s ease;
+}
+.modal__x:hover { background: rgba(255,255,255,.08); color: var(--text); }
+.modal__title { font-size: 21px; font-weight: 700; margin-bottom: 14px; padding-right: 24px; }
+.modal__preview {
+  margin-bottom: 20px; padding: 14px 18px; border-radius: 14px;
+  background: rgba(16,10,34,.5); border: 1px solid var(--line);
+  font-size: 15px; color: var(--text); line-height: 1.6; word-break: break-word;
+}
+.modal__agree { display: flex; align-items: flex-start; gap: 11px; cursor: pointer; font-size: 14px; color: var(--text-soft); line-height: 1.5; }
+.modal__agree input { position: absolute; opacity: 0; width: 0; height: 0; }
+.modal__agree-box {
+  flex: 0 0 auto; width: 20px; height: 20px; margin-top: 1px; border-radius: 6px;
+  border: 1.5px solid var(--line-strong); transition: all .2s ease; position: relative;
+}
+.modal__agree input:checked + .modal__agree-box {
+  background: var(--grad-full); border-color: transparent;
+}
+.modal__agree input:checked + .modal__agree-box::after {
+  content: ""; position: absolute; inset: 0;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") center/14px no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") center/14px no-repeat;
+  background: #fff;
+}
+.modal__agree input:focus-visible + .modal__agree-box { box-shadow: 0 0 0 3px rgba(255,77,141,.3); }
+.modal__actions { display: flex; gap: 12px; margin-top: 24px; }
+.modal__actions .btn { flex: 1; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; pointer-events: none; }
+
+/* =========================================================
+   Nominee 获奖流程弹窗
+   ========================================================= */
+.nominee__panel { max-width: 560px; text-align: center; }
+.nominee__dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 22px; }
+.nominee__dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); transition: all .3s ease; }
+.nominee__dots span.is-active { width: 22px; border-radius: 4px; background: var(--grad-full); }
+
+.nstep { display: none; }
+.nstep.is-active { display: block; animation: nstepIn .35s ease both; }
+@keyframes nstepIn { from { opacity: 0; transform: translateY(10px); } }
+.nstep__badge {
+  width: 78px; height: 78px; margin: 4px auto 22px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--grad-full); background-size: 170% 170%;
+  animation: btnShift 7s ease infinite; box-shadow: 0 16px 44px -14px rgba(224,53,154,.7);
+}
+.nstep__badge svg { width: 38px; height: 38px; fill: none; stroke: #fff; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.nstep__title { font-size: 23px; font-weight: 800; line-height: 1.25; margin-bottom: 14px; }
+.nstep__title--sm { font-size: 21px; margin-bottom: 6px; }
+.nstep__text { font-size: 15px; color: var(--text-soft); line-height: 1.75; margin-bottom: 26px; }
+.nstep__sub { font-size: 14px; color: var(--text-muted); margin-bottom: 22px; }
+.nstep__meta { font-size: 14px; font-weight: 600; color: var(--lavender); margin: -14px 0 26px; }
+
+/* Nominee 表单 */
+.nstep--form { text-align: left; }
+.nform .field { margin-bottom: 14px; }
+.nform textarea {
+  width: 100%; padding: 13px 15px; border-radius: 12px; resize: vertical; min-height: 64px;
+  background: rgba(16,10,34,.6); border: 1px solid var(--line-strong); color: var(--text);
+  font: inherit; font-size: 15px; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.nform textarea::placeholder { color: #6f6594; }
+.nform textarea:focus { outline: none; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255,77,141,.18); background: rgba(16,10,34,.85); }
+.nform textarea.is-invalid { border-color: #ff5470; box-shadow: 0 0 0 3px rgba(255,84,112,.16); }
+.nform .btn { margin-top: 8px; }
+
+/* 照片上传 */
+.nform__photo { display: flex; justify-content: center; margin-bottom: 8px; }
+.photo-up { display: inline-flex; flex-direction: column; align-items: center; gap: 9px; cursor: pointer; }
+.photo-up input { position: absolute; opacity: 0; width: 0; height: 0; }
+.photo-up__preview {
+  width: 84px; height: 84px; border-radius: 50%; overflow: hidden;
+  display: grid; place-items: center;
+  background: rgba(16,10,34,.6); border: 2px dashed var(--line-strong);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.photo-up:hover .photo-up__preview { border-color: var(--pink); }
+.photo-up__preview svg { width: 36px; height: 36px; fill: none; stroke: var(--text-muted); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.photo-up__preview img { width: 100%; height: 100%; object-fit: cover; }
+.photo-up.has-photo .photo-up__preview { border-style: solid; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255,77,141,.18); }
+.photo-up__text { font-size: 13px; color: var(--text-soft); }
+
+/* 互动区 / 弹窗 响应式 */
+@media (max-width: 760px) {
+  .barrage__compose { flex-direction: column; }
+  .barrage__send { width: 100%; }
+  .bubble { max-width: 78vw; }
+}
+@media (max-width: 480px) {
+  .modal__panel { padding: 28px 20px 24px; }
+  .nstep__title { font-size: 20px; }
+  .modal__actions { flex-direction: column-reverse; }
+}
