@@ -19,6 +19,8 @@
   var detailTitle = document.getElementById('nomAdminDetailTitle');
   var detailPhoto = document.getElementById('nomAdminDetailPhoto');
   var detailImg = document.getElementById('nomAdminDetailImg');
+  var detailPosterWrap = document.getElementById('nomAdminDetailPosterWrap');
+  var detailPoster = document.getElementById('nomAdminDetailPoster');
   var detailRows = document.getElementById('nomAdminDetailRows');
 
   var currentKey = '';
@@ -164,10 +166,11 @@
       var photoTag = n.hasPhoto
         ? '<span class="nom-admin__tag">有照片</span>'
         : '<span class="nom-admin__tag nom-admin__tag--muted">无照片</span>';
+      var posterTag = n.hasPoster ? '<span class="nom-admin__tag">有海报</span>' : '';
       return (
         '<button type="button" class="nom-admin__card" data-nominee-id="' + n.id + '">' +
         '<div class="nom-admin__card-top">' +
-        '<strong>' + esc(n.name) + '</strong>' + photoTag +
+        '<strong>' + esc(n.name) + '</strong>' + photoTag + posterTag +
         '</div>' +
         (sub ? '<div class="nom-admin__card-sub">' + esc(sub) + '</div>' : '') +
         '<div class="nom-admin__card-meta">' + esc(n.createdAt || '') + '</div>' +
@@ -219,6 +222,15 @@
         detailPhoto.hidden = true;
         detailImg.removeAttribute('src');
       }
+      if (detailPosterWrap && detailPoster) {
+        if (n.posterDataUrl) {
+          detailPosterWrap.hidden = false;
+          detailPoster.src = n.posterDataUrl;
+        } else {
+          detailPosterWrap.hidden = true;
+          detailPoster.removeAttribute('src');
+        }
+      }
       detailRows.innerHTML = [
         rowHtml('昵称', n.nickname),
         rowHtml('公司', n.company),
@@ -241,6 +253,7 @@
     detailEl.hidden = true;
     document.body.classList.remove('nom-admin-detail-open');
     detailImg.removeAttribute('src');
+    if (detailPoster) detailPoster.removeAttribute('src');
   }
 
   detailEl.querySelectorAll('[data-nom-admin-close]').forEach(function (el) {

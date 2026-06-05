@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><title>canvas composite test</title>
+<style>body{background:#111;margin:0}#out{display:block;width:360px;margin:20px auto}#flag{color:#0f0;font:14px monospace;text-align:center}</style>
+</head><body>
+<div id="flag">working…</div>
+<img id="out" alt="result"/>
+<script>
+// —— 复刻 js/main.js 的 buildPosterDataUrl 逻辑 ——
+var POSTER_TEMPLATE_URL = '/assets/template-web.png';
+var POSTER_WIN_LEFT = 0.1785, POSTER_WIN_BOTTOM = 0.6378, POSTER_BASE_FILL = '#6d3fa0';
+function loadImage(src){return new Promise(function(res,rej){var i=new Image();i.onload=function(){res(i)};i.onerror=function(){rej(new Error('load fail '+src))};i.src=src;});}
+function drawCover(ctx,img,dx,dy,dw,dh){var iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;var s=Math.max(dw/iw,dh/ih);var sw=dw/s,sh=dh/s;var sx=(iw-sw)/2,sy=(ih-sh)/2;ctx.drawImage(img,sx,sy,sw,sh,dx,dy,dw,dh);}
+function sampleCornerColor(img){try{var c=document.createElement('canvas');c.width=1;c.height=1;var x=c.getContext('2d');var sw=Math.min(24,img.naturalWidth||img.width||1),sh=Math.min(24,img.naturalHeight||img.height||1);x.drawImage(img,0,0,sw,sh,0,0,1,1);var d=x.getImageData(0,0,1,1).data;return 'rgb('+d[0]+','+d[1]+','+d[2]+')';}catch(e){return POSTER_BASE_FILL;}}
+function buildPosterDataUrl(portraitUrl){
+  return Promise.all([loadImage(POSTER_TEMPLATE_URL),loadImage(portraitUrl)]).then(function(imgs){
+    var tpl=imgs[0],por=imgs[1];var W=tpl.naturalWidth,H=tpl.naturalHeight;
+    var canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+    var ctx=canvas.getContext('2d');if(!ctx)throw new Error('no ctx');
+    var wl=Math.round(W*POSTER_WIN_LEFT),wb=Math.round(H*POSTER_WIN_BOTTOM);
+    ctx.fillStyle=sampleCornerColor(por);ctx.fillRect(0,0,W,H);
+    drawCover(ctx,por,wl,0,W-wl,wb);ctx.drawImage(tpl,0,0,W,H);
+    return canvas.toDataURL('image/jpeg',0.95);
+  });
+}
+buildPosterDataUrl('/tools/nominee-preview-portrait-A.png').then(function(url){
+  document.getElementById('out').src=url;
+  document.getElementById('flag').textContent='OK len='+url.length;
+  window.__done=true;window.__url=url;
+}).catch(function(e){document.getElementById('flag').textContent='ERR '+e.message;window.__done=true;window.__err=e.message;});
+</script></body></html>

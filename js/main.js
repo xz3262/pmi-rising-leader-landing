@@ -673,7 +673,69 @@
   }
 
   /* =========================================================
-     11. 第五屏 Nominee 获奖流程（多步弹窗）
+     11. 专属海报：前端把 AI 人像合成进透明模板
+     ========================================================= */
+  var POSTER_TEMPLATE_URL = 'assets/template-web.png';
+  // 透明人像窗口比例（由 template.png alpha 检测：left 17.85%、bottom 63.78%）
+  var POSTER_WIN_LEFT = 0.1785;
+  var POSTER_WIN_BOTTOM = 0.6378;
+  var POSTER_BASE_FILL = '#6d3fa0'; // 兜底紫，仅在模板透明缝隙处可见
+
+  function loadImage(src) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () { resolve(img); };
+      img.onerror = function () { reject(new Error('图片加载失败')); };
+      img.src = src;
+    });
+  }
+
+  // object-fit: cover —— 把图片铺满目标矩形并居中裁剪
+  function drawCover(ctx, img, dx, dy, dw, dh) {
+    var iw = img.naturalWidth || img.width;
+    var ih = img.naturalHeight || img.height;
+    var scale = Math.max(dw / iw, dh / ih);
+    var sw = dw / scale, sh = dh / scale;
+    var sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+  }
+
+  // 取人像「左上角一小块」的均值作兜底背景（即背景紫，而非整图平均色）
+  function sampleCornerColor(img) {
+    try {
+      var c = document.createElement('canvas');
+      c.width = 1; c.height = 1;
+      var x = c.getContext('2d');
+      var sw = Math.min(24, img.naturalWidth || img.width || 1);
+      var sh = Math.min(24, img.naturalHeight || img.height || 1);
+      x.drawImage(img, 0, 0, sw, sh, 0, 0, 1, 1); // 源矩形只取左上角
+      var d = x.getImageData(0, 0, 1, 1).data;
+      return 'rgb(' + d[0] + ',' + d[1] + ',' + d[2] + ')';
+    } catch (e) { return POSTER_BASE_FILL; }
+  }
+
+  // 人像垫在窗口下方 + 叠加模板 → 返回合成后的 JPEG dataURL
+  function buildPosterDataUrl(portraitDataUrl) {
+    return Promise.all([loadImage(POSTER_TEMPLATE_URL), loadImage(portraitDataUrl)])
+      .then(function (imgs) {
+        var tpl = imgs[0], por = imgs[1];
+        var W = tpl.naturalWidth, H = tpl.naturalHeight;
+        var canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        var ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('无法获取画布上下文');
+        var winLeft = Math.round(W * POSTER_WIN_LEFT);
+        var winBottom = Math.round(H * POSTER_WIN_BOTTOM);
+        ctx.fillStyle = sampleCornerColor(por);
+        ctx.fillRect(0, 0, W, H);
+        drawCover(ctx, por, winLeft, 0, W - winLeft, winBottom);
+        ctx.drawImage(tpl, 0, 0, W, H);
+        return canvas.toDataURL('image/jpeg', 0.95);
+      });
+  }
+
+  /* =========================================================
+     12. 第五屏 Nominee 获奖流程（多步弹窗）
      ========================================================= */
   function initNominee() {
     var modal = document.getElementById('nomineeModal');
@@ -691,7 +753,7 @@
     }
 
     document.querySelectorAll('[data-nominee-open]').forEach(function (b) {
-      b.addEventListener('click', function () { show(1); openModal(modal); });
+      b.addEventListener('click', function () { resetPoster(); show(1); openModal(modal); });
     });
     modal.querySelectorAll('[data-nominee-close]').forEach(function (el) {
       el.addEventListener('click', function () { closeModal(modal); });
@@ -711,7 +773,7 @@
         reader.onload = function (ev) {
           preview.innerHTML = '<img src="' + ev.target.result + '" alt="个人照片预览" />';
           var wrap = photo.closest('.photo-up');
-          if (wrap) wrap.classList.add('has-photo');
+          if (wrap) { wrap.classList.add('has-photo'); wrap.classList.remove('is-invalid'); }
         };
         reader.readAsDataURL(f);
       });
@@ -728,14 +790,87 @@
       if (uploadDetail) uploadDetail.textContent = detail || '请稍候';
     }
 
+    // ---- 专属海报状态机 ----
+    var nomineeId = 0;
+    var posterStarted = false;
+    var nposter = document.getElementById('nposter');
+    var nposterLoading = document.getElementById('nposterLoading');
+    var nposterResult = document.getElementById('nposterResult');
+    var nposterError = document.getElementById('nposterError');
+    var nposterErrorMsg = document.getElementById('nposterErrorMsg');
+    var nposterImg = document.getElementById('nposterImg');
+    var nposterDownload = document.getElementById('nposterDownload');
+    var nposterRetry = document.getElementById('nposterRetry');
+    var nposterNophoto = document.getElementById('nposterNophoto');
+
+    function showPosterState(state) {
+      if (!nposter) return;
+      nposter.hidden = false;
+      if (nposterLoading) nposterLoading.hidden = state !== 'loading';
+      if (nposterResult) nposterResult.hidden = state !== 'result';
+      if (nposterError) nposterError.hidden = state !== 'error';
+      if (nposterNophoto) nposterNophoto.hidden = state !== 'nophoto';
+    }
+
+    function resetPoster() {
+      nomineeId = 0;
+      posterStarted = false;
+      if (nposter) nposter.hidden = true;
+      if (nposterImg) nposterImg.removeAttribute('src');
+    }
+
+    function generatePoster() {
+      if (!nomineeId || !nposter) return;
+      showPosterState('loading');
+      fetch('/api/poster', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: nomineeId })
+      })
+        .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, status: r.status, body: body }; }); })
+        .then(function (res) {
+          if (res.status === 422 && res.body && res.body.noPhoto) {
+            showPosterState('nophoto'); // 未上传照片：给出明确提示
+            return null;
+          }
+          if (!res.ok || !res.body.posterDataUrl) {
+            throw new Error((res.body && res.body.error) || '生成失败');
+          }
+          return buildPosterDataUrl(res.body.posterDataUrl);
+        })
+        .then(function (finalUrl) {
+          if (!finalUrl) return;
+          if (nposterImg) nposterImg.src = finalUrl;
+          if (nposterDownload) nposterDownload.href = finalUrl;
+          showPosterState('result');
+        })
+        .catch(function (err) {
+          if (nposterErrorMsg) nposterErrorMsg.textContent = (err && err.message) ? err.message : '网络波动，请重试一次';
+          showPosterState('error');
+        });
+    }
+
+    if (nposterRetry) {
+      nposterRetry.addEventListener('click', function () { if (nomineeId) generatePoster(); });
+    }
+
     // 注册信息提交 → 入库 → 感谢页
     var nform = document.getElementById('nomineeForm');
     if (nform) {
       nform.addEventListener('submit', function (e) {
         e.preventDefault();
-        if (!validate(nform)) {
-          var firstErr = nform.querySelector('.is-invalid');
-          if (firstErr) firstErr.focus();
+        // 照片必填
+        var photoWrap = photo ? photo.closest('.photo-up') : null;
+        var photoMissing = !photo || !photo.files || !photo.files[0];
+        if (photoWrap) photoWrap.classList.toggle('is-invalid', photoMissing);
+        var formOk = validate(nform);
+        if (photoMissing || !formOk) {
+          if (photoMissing && photoWrap) {
+            photoWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } else {
+            var firstErr = nform.querySelector('.field .is-invalid');
+            if (firstErr) firstErr.focus();
+          }
           return;
         }
         var submitBtn = nform.querySelector('[type="submit"]');
@@ -766,7 +901,9 @@
           .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
           .then(function (res) {
             if (!res.ok || !res.body.ok) throw new Error((res.body && res.body.error) || '提交失败');
+            nomineeId = Number(res.body.id || 0);
             show(4);
+            if (nomineeId && !posterStarted) { posterStarted = true; generatePoster(); }
           })
           .catch(function (err) {
             window.alert(err.message || '提交失败，请稍后重试');

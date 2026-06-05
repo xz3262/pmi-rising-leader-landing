@@ -4,3 +4,8 @@ node_modules/
 .env.local
 nominee-preview*
 .claude/
+
+# 本地测试图（含真人照片，勿提交/勿部署）
+tools/*.png
+tools/*.jpg
+tools/*.jpeg

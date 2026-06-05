@@ -1013,7 +1013,26 @@ body.modal-open { overflow: hidden; }
 .photo-up__preview img { width: 100%; height: 100%; object-fit: cover; }
 .photo-up.has-photo .photo-up__preview { border-style: solid; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255,77,141,.18); }
 .photo-up__text { font-size: 13px; color: var(--text-soft); }
+.photo-up__text i { color: var(--pink); font-style: normal; }
+.photo-up.is-invalid .photo-up__preview { border-style: solid; border-color: #ff5470; box-shadow: 0 0 0 3px rgba(255,84,112,.16); }
 .photo-up__hint { font-size: 11px; color: var(--text-muted); line-height: 1.4; max-width: 220px; text-align: center; }
+
+/* 专属海报 */
+.nposter { margin: 2px 0 24px; }
+.nposter[hidden] { display: none; }
+.nposter__loading[hidden], .nposter__result[hidden], .nposter__error[hidden] { display: none; }
+.nposter__loading { padding: 14px 0 6px; }
+.nposter__loading p { margin-top: 16px; font-size: 16px; font-weight: 600; }
+.nposter__loading small { display: block; margin-top: 6px; color: var(--text-muted); font-size: 13px; }
+.nposter__lead { font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--lavender); }
+.nposter__result img {
+  display: block; width: 100%; max-width: 320px; margin: 0 auto 16px;
+  border-radius: 14px; box-shadow: 0 22px 60px -18px rgba(0,0,0,.7);
+}
+.nposter__result .btn, .nposter__error .btn { max-width: 320px; margin: 0 auto; }
+.nposter__tip { display: block; margin-top: 10px; font-size: 12px; color: var(--text-muted); }
+.nposter__error { padding: 10px 0; }
+.nposter__error small { display: block; margin: 6px 0 16px; color: var(--text-muted); font-size: 13px; }
 
 /* 互动区 / 弹窗 响应式 */
 @media (max-width: 760px) {

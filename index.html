@@ -452,8 +452,8 @@
               <span class="photo-up__preview" id="photoPreview" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 20a8 8 0 0 1 16 0"/></svg>
               </span>
-              <span class="photo-up__text">上传个人照片</span>
-              <span class="photo-up__hint">10MB 以内，大图将自动压缩</span>
+              <span class="photo-up__text">上传个人照片 <i>*</i></span>
+              <span class="photo-up__hint">必传 · 用于生成专属海报，建议正脸半身照 · 10MB 以内</span>
             </label>
           </div>
           <div class="field-row">
@@ -498,13 +498,38 @@
         </form>
       </div>
 
-      <!-- Step 4：感谢 -->
+      <!-- Step 4：感谢 + 专属海报 -->
       <div class="nstep nstep--thanks" data-step="4">
         <div class="success__check">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
         </div>
         <h3 class="nstep__title">感谢填写！</h3>
         <p class="nstep__text">期待与您在 PMI Rising Leader 2026 见面！</p>
+
+        <!-- 专属海报（AI 生成 + 前端合成模板） -->
+        <div class="nposter" id="nposter" hidden>
+          <div class="nposter__loading" id="nposterLoading">
+            <div class="spinner" aria-hidden="true"></div>
+            <p>正在为你生成专属海报…</p>
+            <small>约需 10–20 秒，请勿关闭页面</small>
+          </div>
+          <div class="nposter__result" id="nposterResult" hidden>
+            <p class="nposter__lead">你的专属获奖海报已生成 🎉</p>
+            <img id="nposterImg" alt="你的专属获奖海报" />
+            <a class="btn btn--gradient btn--block" id="nposterDownload" download="PMI-Rising-Leader-海报.jpg">保存海报</a>
+            <small class="nposter__tip">手机端可长按上方图片保存到相册</small>
+          </div>
+          <div class="nposter__error" id="nposterError" hidden>
+            <p class="nposter__lead">海报生成暂时失败了 😢</p>
+            <small id="nposterErrorMsg">网络波动，请重试一次</small>
+            <button type="button" class="btn btn--ghost btn--block" id="nposterRetry">重试生成</button>
+          </div>
+          <div class="nposter__error" id="nposterNophoto" hidden>
+            <p class="nposter__lead">本次未生成专属海报</p>
+            <small>因为没有上传照片～下次记得上传一张正脸照，就能生成你的专属海报啦</small>
+          </div>
+        </div>
+
         <p class="nstep__meta">2026 年 6 月 27 日 · 苏州园区香格里拉大酒店</p>
         <button type="button" class="btn btn--lg btn--gradient btn--block" data-nominee-close>完成</button>
       </div>
