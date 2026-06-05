@@ -29,7 +29,7 @@
       </a>
       <nav class="nav__links" aria-label="主导航">
         <a href="#value">亮点</a>
-        <a href="#companies">参会企业</a>
+        <a href="#companies">拟邀参会企业</a>
         <a href="#agenda">议程</a>
         <a href="#register">报名</a>
         <a href="#interaction">互动</a>
@@ -120,12 +120,12 @@
     </div>
   </section>
 
-  <!-- ===== 第三屏 参会企业 ===== -->
+  <!-- ===== 第三屏 拟邀参会企业 ===== -->
   <section class="section companies" id="companies">
     <div class="container">
       <div class="section__head">
-        <span class="section__kicker">Who's Coming</span>
-        <h2 class="section__title">他们已经来了</h2>
+        <span class="section__kicker">Invited Companies</span>
+        <h2 class="section__title">拟邀参会企业</h2>
       </div>
       <div class="logo-wall" id="logoWall"><!-- JS 注入占位 logo --></div>
       <p class="companies__footer">覆盖科技、制造、能源、医疗、金融、教育等数十个行业。</p>
@@ -181,7 +181,10 @@
             <div class="field-row">
               <div class="field">
                 <label for="f-phone">手机 <i>*</i></label>
-                <input id="f-phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" required placeholder="11 位手机号" maxlength="11" />
+                <div class="phone-input">
+                  <select id="f-phone-cc" name="phoneCc" class="phone-input__cc" aria-label="国家/地区区号"></select>
+                  <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="手机号（不含区号）" maxlength="20" class="phone-input__num" />
+                </div>
               </div>
               <div class="field">
                 <label for="f-email">邮箱 <i>*</i></label>
@@ -479,7 +482,10 @@
           <div class="field-row">
             <div class="field">
               <label for="n-phone">联系方式 <i>*</i></label>
-              <input id="n-phone" name="phone" type="tel" inputmode="numeric" required maxlength="11" placeholder="11 位手机号" />
+              <div class="phone-input">
+                <select id="n-phone-cc" name="phoneCc" class="phone-input__cc" aria-label="国家/地区区号"></select>
+                <input id="n-phone" name="phone" type="tel" inputmode="tel" required placeholder="手机号（不含区号）" maxlength="20" class="phone-input__num" />
+              </div>
             </div>
             <div class="field">
               <label for="n-email">邮箱 <i>*</i></label>

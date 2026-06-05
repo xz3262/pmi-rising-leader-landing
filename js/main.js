@@ -68,7 +68,7 @@
   }
 
   /* =========================================================
-     2. 参会企业 logo 墙（占位）
+     2. 拟邀参会企业 logo 墙（占位）
      ========================================================= */
   var COMPANIES = [
     '华为','字节跳动','阿里云','京东','比亚迪','宁德时代',
@@ -89,6 +89,68 @@
         '<span class="logo-item__name">' + name + '</span>';
       wall.appendChild(item);
     });
+  }
+
+  /* =========================================================
+     2b. 手机号国家/地区区号
+     —— 国际嘉宾号码位数不固定，前面单独选区号，号码本身不限位数。
+        无需第三方库：维护一份常用区号清单即可，默认中国大陆 +86。
+     ========================================================= */
+  var COUNTRY_CODES = [
+    { n: '中国大陆', d: '+86' }, { n: '中国香港', d: '+852' }, { n: '中国澳门', d: '+853' }, { n: '中国台湾', d: '+886' },
+    { n: '日本', d: '+81' }, { n: '韩国', d: '+82' }, { n: '新加坡', d: '+65' }, { n: '马来西亚', d: '+60' },
+    { n: '泰国', d: '+66' }, { n: '印度尼西亚', d: '+62' }, { n: '菲律宾', d: '+63' }, { n: '越南', d: '+84' },
+    { n: '印度', d: '+91' }, { n: '巴基斯坦', d: '+92' }, { n: '孟加拉国', d: '+880' }, { n: '斯里兰卡', d: '+94' },
+    { n: '尼泊尔', d: '+977' }, { n: '柬埔寨', d: '+855' }, { n: '缅甸', d: '+95' }, { n: '老挝', d: '+856' },
+    { n: '文莱', d: '+673' }, { n: '蒙古', d: '+976' }, { n: '哈萨克斯坦', d: '+7' },
+    { n: '阿联酋', d: '+971' }, { n: '沙特阿拉伯', d: '+966' }, { n: '卡塔尔', d: '+974' }, { n: '科威特', d: '+965' },
+    { n: '巴林', d: '+973' }, { n: '阿曼', d: '+968' }, { n: '以色列', d: '+972' }, { n: '土耳其', d: '+90' },
+    { n: '伊朗', d: '+98' }, { n: '伊拉克', d: '+964' }, { n: '约旦', d: '+962' }, { n: '黎巴嫩', d: '+961' },
+    { n: '澳大利亚', d: '+61' }, { n: '新西兰', d: '+64' }, { n: '斐济', d: '+679' },
+    { n: '美国', d: '+1' }, { n: '加拿大', d: '+1' }, { n: '墨西哥', d: '+52' },
+    { n: '巴西', d: '+55' }, { n: '阿根廷', d: '+54' }, { n: '智利', d: '+56' }, { n: '哥伦比亚', d: '+57' },
+    { n: '秘鲁', d: '+51' }, { n: '委内瑞拉', d: '+58' },
+    { n: '英国', d: '+44' }, { n: '爱尔兰', d: '+353' }, { n: '法国', d: '+33' }, { n: '德国', d: '+49' },
+    { n: '意大利', d: '+39' }, { n: '西班牙', d: '+34' }, { n: '葡萄牙', d: '+351' }, { n: '荷兰', d: '+31' },
+    { n: '比利时', d: '+32' }, { n: '瑞士', d: '+41' }, { n: '奥地利', d: '+43' }, { n: '瑞典', d: '+46' },
+    { n: '挪威', d: '+47' }, { n: '丹麦', d: '+45' }, { n: '芬兰', d: '+358' }, { n: '波兰', d: '+48' },
+    { n: '捷克', d: '+420' }, { n: '匈牙利', d: '+36' }, { n: '希腊', d: '+30' }, { n: '罗马尼亚', d: '+40' },
+    { n: '俄罗斯', d: '+7' }, { n: '乌克兰', d: '+380' }, { n: '卢森堡', d: '+352' }, { n: '冰岛', d: '+354' },
+    { n: '埃及', d: '+20' }, { n: '南非', d: '+27' }, { n: '尼日利亚', d: '+234' }, { n: '肯尼亚', d: '+254' },
+    { n: '摩洛哥', d: '+212' }, { n: '埃塞俄比亚', d: '+251' }, { n: '加纳', d: '+233' }, { n: '坦桑尼亚', d: '+255' }
+  ];
+
+  function buildPhoneCodes() {
+    var opts = COUNTRY_CODES.map(function (c) {
+      return '<option value="' + c.d + '">' + c.n + ' ' + c.d + '</option>';
+    }).join('');
+    ['f-phone-cc', 'n-phone-cc'].forEach(function (id) {
+      var sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = opts;
+      sel.value = '+86'; // 默认中国大陆
+    });
+  }
+
+  // 取号码纯数字部分（去掉空格/连字符等）
+  function phoneDigits(v) {
+    return String(v || '').replace(/\D/g, '');
+  }
+  // 把区号与号码拼成入库格式：如 "+86 13800138000"
+  function fullPhone(form) {
+    var cc = form.phoneCc && form.phoneCc.value ? form.phoneCc.value : '+86';
+    var ccDigits = cc.replace(/\D/g, '');
+    var raw = String(form.phone.value || '').trim();
+    var local;
+    // 用户若把含区号的号码整段粘进来（+86.../0086...），剥掉国际前缀与重复区号，
+    // 避免拼成 "+86 8613800138000"。只有明确以 + 或 00 开头才剥，不误伤国内号。
+    if (/^(\+|00)/.test(raw)) {
+      local = raw.replace(/^(\+|00)/, '').replace(/\D/g, '');
+      if (ccDigits && local.indexOf(ccDigits) === 0) local = local.slice(ccDigits.length);
+    } else {
+      local = phoneDigits(raw);
+    }
+    return cc + ' ' + local;
   }
 
   /* =========================================================
@@ -428,7 +490,10 @@
     required.forEach(function (el) {
       var v = (el.value || '').trim();
       var invalid = !v;
-      if (!invalid && (el.type === 'tel' || el.name === 'phone')) invalid = !/^1\d{10}$/.test(v);
+      if (!invalid && (el.type === 'tel' || el.name === 'phone')) {
+        var d = v.replace(/\D/g, ''); // 国际号码位数不固定，只校验为 4~15 位数字
+        invalid = d.length < 4 || d.length > 15;
+      }
       if (!invalid && (el.type === 'email' || el.name === 'email')) invalid = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
       el.classList.toggle('is-invalid', invalid);
       if (invalid) ok = false;
@@ -446,7 +511,7 @@
       nickname: form.nickname ? form.nickname.value.trim() : '',
       company: form.company.value.trim(),
       title: form.title.value.trim(),
-      phone: form.phone.value.trim(),
+      phone: fullPhone(form),
       email: form.email.value.trim(),
       wechat: form.wechat.value.trim(),
       industry: form.industry.value,
@@ -456,7 +521,7 @@
       price: ticketInfo.price,
       payMethod: method,
       payMethodLabel: PAY_LABELS[method],
-      orderId: 'RL2026-' + String(((form.phone.value || '00000000000').slice(-6)) + Math.floor(Date.now() % 10000)).padStart(10, '0')
+      orderId: 'RL2026-' + String(((phoneDigits(form.phone.value) || '000000').slice(-6)) + Math.floor(Date.now() % 10000)).padStart(10, '0')
     };
   }
 
@@ -889,7 +954,7 @@
                 nickname: nform.nickname ? nform.nickname.value.trim() : '',
                 company: nform.company.value.trim(),
                 title: nform.title.value.trim(),
-                phone: nform.phone.value.trim(),
+                phone: fullPhone(nform),
                 email: nform.email.value.trim(),
                 wechat: nform.wechat ? nform.wechat.value.trim() : '',
                 address: nform.address.value.trim(),
@@ -1022,6 +1087,7 @@
   function init() {
     buildPosterWall();
     buildLogoWall();
+    buildPhoneCodes();
     buildAgenda();
     initNav();
     initTickets();

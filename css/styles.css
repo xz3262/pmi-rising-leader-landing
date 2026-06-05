@@ -333,7 +333,7 @@ body::before {
 .vcard p { font-size: 14.5px; color: var(--text-muted); line-height: 1.7; }
 
 /* =========================================================
-   参会企业 logo 墙
+   拟邀参会企业 logo 墙
    ========================================================= */
 .logo-wall { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
 .logo-item {
@@ -432,6 +432,21 @@ body::before {
 }
 .field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23b3a0d9' d='M6 8 0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; padding-right: 38px; }
 .field input.is-invalid, .field select.is-invalid { border-color: #ff5470; box-shadow: 0 0 0 3px rgba(255,84,112,.16); }
+
+/* 手机号：国家/地区区号下拉 + 号码输入 */
+.phone-input { display: flex; gap: 8px; align-items: stretch; }
+.phone-input select.phone-input__cc {
+  width: auto; flex: 0 0 auto; min-width: 96px; max-width: 138px;
+  padding-left: 13px; padding-right: 30px; font-size: 14px;
+  background-position: right 11px center;
+}
+.phone-input input.phone-input__num { flex: 1 1 auto; min-width: 0; }
+/* 断点取 600px：覆盖 field-row 仍为双栏(>480px)却已偏窄的区间，避免号码框被区号挤没 */
+@media (max-width: 600px) {
+  .phone-input { gap: 6px; }
+  .phone-input select.phone-input__cc { min-width: 84px; font-size: 13px; padding-left: 11px; }
+  .phone-input input.phone-input__num { min-width: 96px; }
+}
 
 /* 邀请码：输入框 + 确认按钮 */
 .invite { display: flex; gap: 10px; align-items: stretch; }

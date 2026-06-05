@@ -31,12 +31,21 @@ function generateOrderId() {
   return ('RL2026' + Date.now() + suffix).slice(0, 32);
 }
 
+// 手机号：含国际号码，前端会拼成「+区号 号码」。位数不固定，
+// 只要求可选 + 开头、5~20 位数字（去掉空格/连字符后）。
+function isValidPhone(raw) {
+  var s = String(raw || '').trim();
+  if (!/^\+?[\d\s-]+$/.test(s)) return false;
+  var digits = s.replace(/\D/g, '');
+  return digits.length >= 5 && digits.length <= 20;
+}
+
 function validateBody(body) {
   var errors = [];
   if (!body.name || !String(body.name).trim()) errors.push('请填写姓名');
   if (!body.company || !String(body.company).trim()) errors.push('请填写公司');
   if (!body.title || !String(body.title).trim()) errors.push('请填写职位');
-  if (!/^1\d{10}$/.test(String(body.phone || '').trim())) errors.push('请填写正确手机号');
+  if (!isValidPhone(body.phone)) errors.push('请填写正确手机号');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(body.email || '').trim())) errors.push('请填写正确邮箱');
   if (!body.industry || !String(body.industry).trim()) errors.push('请选择行业');
   if (!TICKETS[body.ticket]) errors.push('请选择票种');
