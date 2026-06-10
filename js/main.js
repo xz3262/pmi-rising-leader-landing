@@ -1179,7 +1179,8 @@
                 accept_ceremony_interview: String((nform.elements.interviewLive && nform.elements.interviewLive.value) || ''),
                 auth_agreed: !!(authBox && authBox.checked),
                 photo_mime: photoData.photo_mime,
-                photo_base64: photoData.photo_base64
+                photo_base64: photoData.photo_base64,
+                photo_thumb_base64: photoData.photo_thumb_base64 || ''
               })
             });
           })
@@ -1208,16 +1209,17 @@
   var NOMINEE_PHOTO_MAX_EDGE = 2400;
   var NOMINEE_JPEG_QUALITY = 0.82;
   var NOMINEE_JPEG_QUALITY_LOW = 0.72;
+  // 缩略图：供管理后台快速预览，原图仍用于海报生成
+  var NOMINEE_THUMB_MAX_EDGE = 480;
+  var NOMINEE_THUMB_QUALITY = 0.72;
 
-  function blobToBase64Payload(blob) {
+  function blobToBase64(blob) {
     return new Promise(function (resolve, reject) {
+      if (!blob) return resolve('');
       var reader = new FileReader();
       reader.onload = function (ev) {
         var parts = String(ev.target.result || '').split(',');
-        resolve({
-          photo_mime: 'image/jpeg',
-          photo_base64: parts[1] || ''
-        });
+        resolve(parts[1] || '');
       };
       reader.onerror = function () { reject(new Error('照片读取失败')); };
       reader.readAsDataURL(blob);
@@ -1237,21 +1239,34 @@
     });
   }
 
-  function drawNomineeSourceToCanvas(source, width, height) {
+  function makeNomineeCanvas(source, width, height, maxEdge) {
     var canvas = document.createElement('canvas');
-    var scale = Math.min(1, NOMINEE_PHOTO_MAX_EDGE / Math.max(width, height, 1));
+    var scale = Math.min(1, maxEdge / Math.max(width, height, 1));
     canvas.width = Math.max(1, Math.round(width * scale));
     canvas.height = Math.max(1, Math.round(height * scale));
     var ctx = canvas.getContext('2d');
-    if (!ctx) return Promise.reject(new Error('照片处理失败'));
+    if (!ctx) return null;
     ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
-    return encodeNomineeCanvas(canvas);
+    return canvas;
+  }
+
+  // 同一来源出两份：原图（海报生成用）+ 缩略图（后台预览用）
+  function drawNomineeSourceToCanvas(source, width, height) {
+    var main = makeNomineeCanvas(source, width, height, NOMINEE_PHOTO_MAX_EDGE);
+    if (!main) return Promise.reject(new Error('照片处理失败'));
+    var thumb = makeNomineeCanvas(source, width, height, NOMINEE_THUMB_MAX_EDGE);
+    return encodeNomineeCanvas(main).then(function (mainBlob) {
+      if (!thumb) return { main: mainBlob, thumb: null };
+      return canvasToJpegBlob(thumb, NOMINEE_THUMB_QUALITY).then(function (thumbBlob) {
+        return { main: mainBlob, thumb: thumbBlob };
+      });
+    });
   }
 
   function compressNomineePhoto(input) {
     return new Promise(function (resolve) {
       var f = input && input.files && input.files[0];
-      if (!f) return resolve({ photo_mime: '', photo_base64: '' });
+      if (!f) return resolve({ photo_mime: '', photo_base64: '', photo_thumb_base64: '' });
       if (f.size > NOMINEE_PHOTO_MAX_BYTES) {
         return resolve({ error: '照片请小于 10MB' });
       }
@@ -1259,10 +1274,16 @@
         return resolve({ error: '请上传图片文件' });
       }
 
-      function done(blob) {
-        if (!blob) return resolve({ error: '照片处理失败' });
-        blobToBase64Payload(blob)
-          .then(function (payload) { resolve(payload); })
+      function done(blobs) {
+        if (!blobs || !blobs.main) return resolve({ error: '照片处理失败' });
+        Promise.all([blobToBase64(blobs.main), blobToBase64(blobs.thumb)])
+          .then(function (encoded) {
+            resolve({
+              photo_mime: 'image/jpeg',
+              photo_base64: encoded[0],
+              photo_thumb_base64: encoded[1]
+            });
+          })
           .catch(function (err) { resolve({ error: err.message || '照片读取失败' }); });
       }
 
@@ -1272,9 +1293,9 @@
         createImageBitmap(f, { imageOrientation: 'from-image' })
           .then(function (bitmap) {
             return drawNomineeSourceToCanvas(bitmap, bitmap.width, bitmap.height)
-              .then(function (blob) {
+              .then(function (blobs) {
                 if (bitmap.close) bitmap.close();
-                done(blob);
+                done(blobs);
               });
           })
           .catch(function () { loadWithImage(); });

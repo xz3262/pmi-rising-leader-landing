@@ -22,6 +22,8 @@
   var detailPosterWrap = document.getElementById('nomAdminDetailPosterWrap');
   var detailPoster = document.getElementById('nomAdminDetailPoster');
   var detailRows = document.getElementById('nomAdminDetailRows');
+  var detailLoadFull = document.getElementById('nomAdminLoadFull');
+  var detailId = 0;
 
   var currentKey = '';
   var activeTab = 'nominees';
@@ -215,21 +217,23 @@
         return;
       }
       detailTitle.textContent = n.name || '得奖人详情';
-      if (n.photoDataUrl) {
+      detailId = n.id;
+      // 默认只显示缩略图（几十 KB），原图/海报点按钮再拉，跨境链路下明显更快
+      if (n.thumbDataUrl) {
         detailPhoto.hidden = false;
-        detailImg.src = n.photoDataUrl;
+        detailImg.src = n.thumbDataUrl;
       } else {
         detailPhoto.hidden = true;
         detailImg.removeAttribute('src');
       }
       if (detailPosterWrap && detailPoster) {
-        if (n.posterDataUrl) {
-          detailPosterWrap.hidden = false;
-          detailPoster.src = n.posterDataUrl;
-        } else {
-          detailPosterWrap.hidden = true;
-          detailPoster.removeAttribute('src');
-        }
+        detailPosterWrap.hidden = true;
+        detailPoster.removeAttribute('src');
+      }
+      if (detailLoadFull) {
+        detailLoadFull.hidden = !(n.hasPhoto || n.hasPoster);
+        detailLoadFull.disabled = false;
+        detailLoadFull.textContent = n.hasPoster ? '查看原图与海报' : '查看原图';
       }
       detailRows.innerHTML = [
         rowHtml('昵称', n.nickname),
@@ -260,6 +264,40 @@
     document.body.classList.remove('nom-admin-detail-open');
     detailImg.removeAttribute('src');
     if (detailPoster) detailPoster.removeAttribute('src');
+    detailId = 0;
+    if (detailLoadFull) detailLoadFull.hidden = true;
+  }
+
+  // 按需加载原图与海报（full=1 返回完整 base64，可能数 MB）
+  if (detailLoadFull) {
+    detailLoadFull.addEventListener('click', function () {
+      if (!detailId || !currentKey) return;
+      var id = detailId;
+      detailLoadFull.disabled = true;
+      detailLoadFull.textContent = '加载中…';
+      fetchJson('/api/nominees?id=' + id + '&full=1', currentKey).then(function (result) {
+        if (id !== detailId) return; // 详情已切换或关闭
+        if (!result.ok) {
+          var err = handleAuthError(result);
+          detailLoadFull.disabled = false;
+          detailLoadFull.textContent = err != null ? (err + '，点击重试') : '查看原图与海报';
+          return;
+        }
+        var n = result.data.nominee || {};
+        if (n.photoDataUrl) {
+          detailPhoto.hidden = false;
+          detailImg.src = n.photoDataUrl;
+        }
+        if (detailPosterWrap && detailPoster && n.posterDataUrl) {
+          detailPosterWrap.hidden = false;
+          detailPoster.src = n.posterDataUrl;
+        }
+        detailLoadFull.hidden = true;
+      }).catch(function () {
+        detailLoadFull.disabled = false;
+        detailLoadFull.textContent = '网络错误，点击重试';
+      });
+    });
   }
 
   detailEl.querySelectorAll('[data-nom-admin-close]').forEach(function (el) {

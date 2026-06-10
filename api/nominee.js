@@ -35,6 +35,9 @@ function validateNominee(body) {
   } else if (String(body.photo_base64).length > 4000000) {
     errors.push('照片过大，请换一张较小的图片');
   }
+  if (body.photo_thumb_base64 && String(body.photo_thumb_base64).length > 400000) {
+    errors.push('照片缩略图过大');
+  }
   return errors;
 }
 
@@ -68,6 +71,7 @@ module.exports = async function handler(req, res) {
       auth_agreed: body.auth_agreed === true ? 1 : 0,
       photo_mime: String(body.photo_mime || '').trim(),
       photo_base64: String(body.photo_base64 || '').trim(),
+      photo_thumb_base64: String(body.photo_thumb_base64 || '').trim(),
       client_ip: meta.clientIp,
       user_agent: meta.userAgent
     });
