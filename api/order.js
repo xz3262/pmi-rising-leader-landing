@@ -96,7 +96,7 @@ module.exports = async function handler(req, res) {
   var pid = env('ZPAY_PID');
   var key = env('ZPAY_KEY');
   var cid = env('ZPAY_CID');
-  var siteUrl = (env('SITE_URL') || 'https://www.hazelabs.app').replace(/\/$/, '');
+  var siteUrl = (env('SITE_URL') || 'https://www.rising2026.com').replace(/\/$/, '');
 
   if (!isFree && (!pid || !key)) {
     return json(res, 500, { error: '支付未配置，请联系管理员' });

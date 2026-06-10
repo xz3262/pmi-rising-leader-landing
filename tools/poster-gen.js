@@ -86,7 +86,7 @@ async function generateImage(opts) {
     headers: {
       'Authorization': 'Bearer ' + apiKey,
       'Content-Type': 'application/json',
-      'HTTP-Referer': process.env.SITE_URL || 'https://www.hazelabs.app',
+      'HTTP-Referer': process.env.SITE_URL || 'https://www.rising2026.com',
       'X-Title': 'PMI Rising Leader Poster'
     },
     body: JSON.stringify(body)
