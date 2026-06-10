@@ -608,17 +608,26 @@
                 <label class="choice__opt"><input type="radio" name="attend" value="否" /><span>否</span></label>
               </div>
             </div>
-            <div class="field field--choice" data-choice="interview">
-              <span class="field__label">是否愿意接受视频采访拍摄 <i>*</i></span>
-              <div class="choice" role="radiogroup" aria-label="是否愿意接受视频采访拍摄">
-                <label class="choice__opt"><input type="radio" name="interview" value="是" /><span>是</span></label>
-                <label class="choice__opt"><input type="radio" name="interview" value="否" /><span>否</span></label>
+            <div class="field field--choice" data-choice="interviewPre">
+              <span class="field__label">是否接受活动前期采访拍摄 <i>*</i></span>
+              <div class="choice" role="radiogroup" aria-label="是否接受活动前期采访拍摄">
+                <label class="choice__opt"><input type="radio" name="interviewPre" value="是" /><span>是</span></label>
+                <label class="choice__opt"><input type="radio" name="interviewPre" value="否" /><span>否</span></label>
               </div>
             </div>
           </div>
           <div class="field" id="interviewCityField" hidden>
             <label for="n-interview-city">所在城市 <i>*</i></label>
-            <input id="n-interview-city" name="interviewCity" type="text" placeholder="便于安排拍摄，请填写您的所在城市" />
+            <input id="n-interview-city" name="interviewCity" type="text" placeholder="便于安排前期拍摄，请填写您的所在城市" />
+          </div>
+          <div class="field-row">
+            <div class="field field--choice" data-choice="interviewLive">
+              <span class="field__label">是否接受典礼期间采访拍摄 <i>*</i></span>
+              <div class="choice" role="radiogroup" aria-label="是否接受典礼期间采访拍摄">
+                <label class="choice__opt"><input type="radio" name="interviewLive" value="是" /><span>是</span></label>
+                <label class="choice__opt"><input type="radio" name="interviewLive" value="否" /><span>否</span></label>
+              </div>
+            </div>
           </div>
           <div class="field">
             <label for="n-address">收件地址 <i>*</i></label>

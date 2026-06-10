@@ -240,9 +240,10 @@
         rowHtml('微信', n.wechat),
         rowHtml('收件地址', n.address),
         rowHtml('现场领奖', n.attendCeremony),
-        rowHtml('接受拍摄', n.acceptInterview === '是' && n.interviewCity
+        rowHtml('前期采访拍摄', n.acceptInterview === '是' && n.interviewCity
           ? n.acceptInterview + '（' + n.interviewCity + '）'
           : n.acceptInterview),
+        rowHtml('典礼期间拍摄', n.acceptCeremonyInterview),
         rowHtml('授权书', n.authAgreed ? '已同意' : ''),
         rowHtml('提交时间', n.createdAt)
       ].join('');

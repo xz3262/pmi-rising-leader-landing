@@ -1043,18 +1043,18 @@
       nposterRetry.addEventListener('click', function () { if (nomineeId) generatePoster(); });
     }
 
-    // 接受拍摄选「是」时，弹出所在城市填写
+    // 活动前期采访拍摄选「是」时，弹出所在城市填写（必填）
     var interviewCityField = document.getElementById('interviewCityField');
     var interviewCityInput = document.getElementById('n-interview-city');
     var nform = document.getElementById('nomineeForm');
 
-    function interviewVal() {
-      return nform && nform.elements.interview ? String(nform.elements.interview.value || '') : '';
+    function interviewPreVal() {
+      return nform && nform.elements.interviewPre ? String(nform.elements.interviewPre.value || '') : '';
     }
 
     function syncInterviewCity() {
       if (!interviewCityField) return;
-      var yes = interviewVal() === '是';
+      var yes = interviewPreVal() === '是';
       interviewCityField.hidden = !yes;
       if (!yes && interviewCityInput) {
         interviewCityInput.value = '';
@@ -1063,7 +1063,7 @@
     }
 
     if (nform) {
-      nform.querySelectorAll('input[name="interview"], input[name="attend"]').forEach(function (r) {
+      nform.querySelectorAll('input[name="attend"], input[name="interviewPre"], input[name="interviewLive"]').forEach(function (r) {
         r.addEventListener('change', function () {
           var wrap = r.closest('.field--choice');
           if (wrap) wrap.classList.remove('is-invalid');
@@ -1114,13 +1114,13 @@
     function validateNomineeExtras() {
       var ok = true;
       var firstBad = null;
-      ['attend', 'interview'].forEach(function (name) {
+      ['attend', 'interviewPre', 'interviewLive'].forEach(function (name) {
         var wrap = nform.querySelector('.field--choice[data-choice="' + name + '"]');
         var missing = !nform.elements[name] || !String(nform.elements[name].value || '');
         if (wrap) wrap.classList.toggle('is-invalid', missing);
         if (missing) { ok = false; firstBad = firstBad || wrap; }
       });
-      if (interviewVal() === '是' && interviewCityInput && !interviewCityInput.value.trim()) {
+      if (interviewPreVal() === '是' && interviewCityInput && !interviewCityInput.value.trim()) {
         interviewCityInput.classList.add('is-invalid');
         ok = false;
         firstBad = firstBad || interviewCityInput;
@@ -1174,8 +1174,9 @@
                 wechat: nform.wechat ? nform.wechat.value.trim() : '',
                 address: nform.address.value.trim(),
                 attend_ceremony: String((nform.elements.attend && nform.elements.attend.value) || ''),
-                accept_interview: interviewVal(),
+                accept_interview: interviewPreVal(),
                 interview_city: interviewCityInput ? interviewCityInput.value.trim() : '',
+                accept_ceremony_interview: String((nform.elements.interviewLive && nform.elements.interviewLive.value) || ''),
                 auth_agreed: !!(authBox && authBox.checked),
                 photo_mime: photoData.photo_mime,
                 photo_base64: photoData.photo_base64
