@@ -14,6 +14,13 @@ function isYesNo(v) {
   return v === '是' || v === '否';
 }
 
+var ABILITY_TAGS = [
+  'Certified Strategic Thinker',
+  'Certified Value Creator',
+  'Certified Team Builder',
+  'Certified Decision Maker'
+];
+
 function validateNominee(body) {
   var errors = [];
   if (!body.name || !String(body.name).trim()) errors.push('请填写姓名');
@@ -29,6 +36,12 @@ function validateNominee(body) {
     errors.push('请填写所在城市');
   }
   if (!isYesNo(String(body.accept_ceremony_interview || '').trim())) errors.push('请确认是否接受典礼期间采访拍摄');
+  var proud = String(body.proud_decision || '').trim();
+  if (!proud) errors.push('请填写「过去一年最自豪的一次管理决策」');
+  else if (proud.length > 2000) errors.push('「最自豪的管理决策」请控制在 2000 字以内');
+  if (ABILITY_TAGS.indexOf(String(body.ability_tag || '').trim()) === -1) {
+    errors.push('请选择你最认同的能力标签');
+  }
   if (body.auth_agreed !== true) errors.push('请先同意《肖像、声音、个人信息使用授权书》');
   if (!body.photo_base64 || !String(body.photo_base64).trim()) {
     errors.push('请上传个人照片');
@@ -68,6 +81,8 @@ module.exports = async function handler(req, res) {
       accept_interview: String(body.accept_interview || '').trim(),
       interview_city: String(body.interview_city || '').trim(),
       accept_ceremony_interview: String(body.accept_ceremony_interview || '').trim(),
+      proud_decision: String(body.proud_decision || '').trim(),
+      ability_tag: String(body.ability_tag || '').trim(),
       auth_agreed: body.auth_agreed === true ? 1 : 0,
       photo_mime: String(body.photo_mime || '').trim(),
       photo_base64: String(body.photo_base64 || '').trim(),

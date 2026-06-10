@@ -17,6 +17,7 @@
   var actionsEl = document.querySelector('.success__actions');
   var outroEl = document.querySelector('.success__outro');
   var eticketEl = document.querySelector('.eticket');
+  var hotelsEl = document.getElementById('hotels');
   var pollCount = 0;
   var pollMax = 20;
   var isFreeTicket = sessionData.payMethod === 'free';
@@ -36,6 +37,7 @@
     if (eticketEl) eticketEl.hidden = true;
     if (noteEl) noteEl.hidden = true;
     if (smsEl) smsEl.hidden = true;
+    if (hotelsEl) hotelsEl.hidden = true;
     if (actionsEl) actionsEl.hidden = true;
     if (outroEl) outroEl.hidden = true;
   }
@@ -50,6 +52,7 @@
     if (eticketEl) eticketEl.hidden = true;
     if (noteEl) noteEl.hidden = true;
     if (smsEl) smsEl.hidden = true;
+    if (hotelsEl) hotelsEl.hidden = true;
     if (actionsEl) actionsEl.hidden = false;
     if (outroEl) outroEl.hidden = false;
   }
@@ -60,6 +63,7 @@
     if (eticketEl) eticketEl.hidden = false;
     if (noteEl) noteEl.hidden = false;
     if (smsEl) smsEl.hidden = false;
+    if (hotelsEl) hotelsEl.hidden = false;
     if (actionsEl) actionsEl.hidden = false;
     if (outroEl) outroEl.hidden = false;
 

@@ -1063,12 +1063,26 @@
     }
 
     if (nform) {
-      nform.querySelectorAll('input[name="attend"], input[name="interviewPre"], input[name="interviewLive"]').forEach(function (r) {
+      nform.querySelectorAll('input[name="attend"], input[name="interviewPre"], input[name="interviewLive"], input[name="abilityTag"]').forEach(function (r) {
         r.addEventListener('change', function () {
           var wrap = r.closest('.field--choice');
           if (wrap) wrap.classList.remove('is-invalid');
           syncInterviewCity();
         });
+      });
+    }
+
+    // 感谢页酒店预订：从首页住宿区块克隆，保持单一内容来源
+    var hotelsSrc = document.querySelector('.hotels-section .hotels__grid');
+    var hotelsDst = document.getElementById('nomineeHotels');
+    if (hotelsSrc && hotelsDst) hotelsDst.innerHTML = hotelsSrc.innerHTML;
+
+    // 「最自豪的管理决策」字数实时统计（上限 2000 字）
+    var proudInput = document.getElementById('n-proud-decision');
+    var proudCount = document.getElementById('proudCount');
+    if (proudInput && proudCount) {
+      proudInput.addEventListener('input', function () {
+        proudCount.textContent = String(proudInput.value.length);
       });
     }
 
@@ -1114,7 +1128,7 @@
     function validateNomineeExtras() {
       var ok = true;
       var firstBad = null;
-      ['attend', 'interviewPre', 'interviewLive'].forEach(function (name) {
+      ['attend', 'interviewPre', 'interviewLive', 'abilityTag'].forEach(function (name) {
         var wrap = nform.querySelector('.field--choice[data-choice="' + name + '"]');
         var missing = !nform.elements[name] || !String(nform.elements[name].value || '');
         if (wrap) wrap.classList.toggle('is-invalid', missing);
@@ -1177,6 +1191,8 @@
                 accept_interview: interviewPreVal(),
                 interview_city: interviewCityInput ? interviewCityInput.value.trim() : '',
                 accept_ceremony_interview: String((nform.elements.interviewLive && nform.elements.interviewLive.value) || ''),
+                proud_decision: proudInput ? proudInput.value.trim() : '',
+                ability_tag: String((nform.elements.abilityTag && nform.elements.abilityTag.value) || ''),
                 auth_agreed: !!(authBox && authBox.checked),
                 photo_mime: photoData.photo_mime,
                 photo_base64: photoData.photo_base64,

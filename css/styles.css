@@ -701,6 +701,44 @@ body::before {
 .success__actions { margin-top: 28px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .success__outro { margin-top: 30px; font-size: 17px; font-weight: 600; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
+/* —— 成功页：会议期间酒店预订 —— */
+.hotels { margin-top: 36px; text-align: left; }
+.hotels__title { font-size: 21px; font-weight: 800; text-align: center; }
+.hotels__sub { margin-top: 8px; font-size: 13px; color: var(--text-muted); text-align: center; }
+.hotels__grid { margin-top: 18px; display: flex; flex-direction: column; gap: 16px; }
+.hotel { padding: 20px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+.hotel__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.hotel__name { font-size: 17px; font-weight: 700; }
+.hotel__badge {
+  flex-shrink: 0; padding: 4px 11px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 600; color: var(--text-soft);
+  background: rgba(255, 255, 255, .08); white-space: nowrap;
+}
+.hotel__prices { display: flex; gap: 12px; margin-bottom: 16px; }
+.hotel__prices li {
+  flex: 1; padding: 12px 10px; text-align: center;
+  border: 1px solid var(--line); border-radius: 12px; background: rgba(16, 10, 34, .5);
+}
+.hotel__prices b { display: block; font-size: 22px; font-weight: 800; line-height: 1.1; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hotel__prices span { display: block; margin-top: 4px; font-size: 12px; color: var(--text-muted); }
+.hotel__qr { display: block; width: 100%; max-width: 270px; margin: 0 auto; border-radius: 12px; }
+.hotel__tip { margin-top: 12px; font-size: 12.5px; color: var(--text-muted); text-align: center; }
+.hotel { display: flex; flex-direction: column; }
+.hotel__btn { margin-top: auto; }
+
+/* —— 首页住宿区块：桌面端双卡并排 —— */
+.hotels-section .hotels__grid { margin-top: 0; }
+@media (min-width: 760px) {
+  .hotels-section .hotels__grid { flex-direction: row; align-items: stretch; max-width: 920px; margin-inline: auto; }
+  .hotels-section .hotel { flex: 1; min-width: 0; }
+}
+
+/* —— Nominee 感谢页酒店预订 —— */
+.nstep__hotels { margin: 30px 0 26px; text-align: left; }
+.nstep__hotels-title { font-size: 18px; font-weight: 800; text-align: center; }
+.nstep__hotels-sub { margin: 6px 0 16px; font-size: 12.5px; color: var(--text-muted); text-align: center; }
+.nstep__hotels .hotel { background: rgba(16, 10, 34, .45); }
+
 /* =========================================================
    验票页（微信扫一扫）
    ========================================================= */
@@ -1060,6 +1098,47 @@ body.modal-open { overflow: hidden; }
 }
 .choice__opt input:focus-visible + span { box-shadow: 0 0 0 3px rgba(255,77,141,.3); }
 .field--choice.is-invalid .choice__opt span { border-color: #ff5470; box-shadow: 0 0 0 3px rgba(255,84,112,.16); }
+
+/* —— Nominee 表单分组（讲讲过去一年的你 / 能力标签） —— */
+.nform__group { margin: 24px 0 16px; padding-top: 20px; border-top: 1px dashed var(--line); }
+.nform__group-kicker { display: block; font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+.nform__group-kicker i { color: var(--pink); font-style: normal; }
+.nform__count { margin-top: 6px; font-size: 12px; color: var(--text-muted); text-align: right; }
+
+/* —— 能力标签单选卡片 —— */
+.tagcards { display: flex; flex-direction: column; gap: 12px; }
+.tagcard {
+  position: relative; display: block; padding: 16px 52px 16px 18px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: rgba(16, 10, 34, .35); cursor: pointer;
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease, background .25s ease;
+}
+.tagcard input { position: absolute; opacity: 0; pointer-events: none; }
+.tagcard:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+.tagcard__check {
+  position: absolute; top: 18px; right: 16px; width: 20px; height: 20px;
+  border-radius: 50%; border: 2px solid var(--line-strong);
+  transition: border-color .25s ease, background .25s ease;
+}
+.tagcard__name { display: block; font-size: 16px; font-weight: 700; }
+.tagcard__desc { display: block; margin-top: 3px; font-size: 13px; color: var(--text-soft); }
+.tagcard__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 11px; }
+.tagcard__chips i {
+  font-style: normal; font-size: 12px; color: var(--text-muted);
+  padding: 3px 11px; border: 1px solid var(--line); border-radius: 999px;
+  background: rgba(255, 255, 255, .03);
+}
+.tagcard:has(input:checked) {
+  border-color: var(--magenta);
+  background: linear-gradient(135deg, rgba(224, 53, 154, .15), rgba(124, 77, 187, .15));
+  box-shadow: 0 0 0 1px var(--magenta), 0 16px 40px -18px rgba(224, 53, 154, .6);
+}
+.tagcard:has(input:checked) .tagcard__check { border-color: var(--pink); background: var(--grad-full); box-shadow: inset 0 0 0 4px var(--card); }
+.tagcard:has(input:focus-visible) { box-shadow: 0 0 0 3px rgba(255, 77, 141, .3); }
+.field--choice.is-invalid .tagcard { border-color: #ff5470; box-shadow: 0 0 0 3px rgba(255, 84, 112, .16); }
+
+/* 后台详情：长文本保留换行 */
+.verify__v--pre { white-space: pre-wrap; }
 
 /* 授权书勾选 */
 .nform__agree { margin: 4px 0 6px; font-size: 13.5px; text-align: left; }

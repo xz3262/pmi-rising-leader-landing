@@ -102,6 +102,17 @@
     );
   }
 
+  // 长文本行（保留换行，用于开放题答案）
+  function rowHtmlLong(label, value) {
+    if (!value) return '';
+    return (
+      '<div class="verify__row">' +
+      '<div class="verify__k">' + esc(label) + '</div>' +
+      '<div class="verify__v verify__v--pre">' + esc(value) + '</div>' +
+      '</div>'
+    );
+  }
+
   function showGate(message) {
     gate.hidden = false;
     tabsNav.hidden = true;
@@ -248,6 +259,8 @@
           ? n.acceptInterview + '（' + n.interviewCity + '）'
           : n.acceptInterview),
         rowHtml('典礼期间拍摄', n.acceptCeremonyInterview),
+        rowHtmlLong('最自豪的管理决策', n.proudDecision),
+        rowHtml('能力标签', n.abilityTag),
         rowHtml('授权书', n.authAgreed ? '已同意' : ''),
         rowHtml('提交时间', n.createdAt)
       ].join('');

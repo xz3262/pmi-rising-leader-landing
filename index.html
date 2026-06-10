@@ -35,6 +35,7 @@
         <a href="#agenda">议程</a>
         <a href="#register">报名</a>
         <a href="#interaction">互动</a>
+        <a href="#hotels">住宿</a>
       </nav>
       <a href="#register" class="btn btn--sm btn--gradient nav__cta">立即报名</a>
       <button class="nav__toggle" id="navToggle" aria-label="菜单" aria-expanded="false">
@@ -375,6 +376,43 @@
     </div>
   </section>
 
+  <!-- ===== 第七屏 酒店住宿预订 ===== -->
+  <section class="section hotels-section" id="hotels">
+    <div class="container">
+      <div class="section__head">
+        <span class="section__kicker">Accommodation</span>
+        <h2 class="section__title">会议期间住宿预订</h2>
+        <p class="section__sub">大会协议价 · 房量有限，建议尽早预订</p>
+      </div>
+      <div class="hotels__grid">
+        <article class="hotel">
+          <div class="hotel__head">
+            <h3 class="hotel__name">苏州凯悦酒店</h3>
+            <span class="hotel__badge">微信扫码预订</span>
+          </div>
+          <ul class="hotel__prices">
+            <li><b>¥600</b><span>含单早</span></li>
+            <li><b>¥680</b><span>含双早</span></li>
+          </ul>
+          <img class="hotel__qr" src="assets/hyatt-booking-qr.png" alt="苏州凯悦酒店预订二维码" loading="lazy" decoding="async" />
+          <p class="hotel__tip">请在微信中长按识别 / 扫描二维码完成预订</p>
+        </article>
+        <article class="hotel">
+          <div class="hotel__head">
+            <h3 class="hotel__name">苏州园区香格里拉大酒店</h3>
+            <span class="hotel__badge">在线预订</span>
+          </div>
+          <ul class="hotel__prices">
+            <li><b>¥500</b><span>含单早</span></li>
+            <li><b>¥600</b><span>含双早</span></li>
+          </ul>
+          <a class="btn btn--gradient btn--block hotel__btn" href="https://www.shangri-la.com/reservations/booking/en/index.aspx?hid=CNSZV002&amp;group_code=POA270626&amp;check_in=20260626&amp;check_out=20260629" target="_blank" rel="noopener">前往官网预订</a>
+          <p class="hotel__tip">已含大会协议团体代码，点击直达预订页面</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== 页脚 ===== -->
   <footer class="footer">
     <div class="container footer__inner">
@@ -631,6 +669,52 @@
               </div>
             </div>
           </div>
+
+          <!-- 第一组：讲讲过去一年的你 -->
+          <div class="nform__group">
+            <span class="nform__group-kicker">讲讲过去一年的你</span>
+            <div class="field">
+              <label for="n-proud-decision">过去一年，你最自豪的一次管理决策是什么？ <i>*</i></label>
+              <textarea id="n-proud-decision" name="proudDecision" rows="4" required maxlength="2000" placeholder="说说当时的情境、你的判断与最终结果（2000 字以内）"></textarea>
+              <p class="nform__count" aria-hidden="true"><span id="proudCount">0</span> / 2000</p>
+            </div>
+          </div>
+
+          <!-- 第二组：能力标签（单选卡片） -->
+          <div class="nform__group field--choice" data-choice="abilityTag">
+            <span class="nform__group-kicker">选择你最认同的能力标签 <i>*</i></span>
+            <div class="tagcards" role="radiogroup" aria-label="选择你最认同的能力标签">
+              <label class="tagcard">
+                <input type="radio" name="abilityTag" value="Certified Strategic Thinker" />
+                <span class="tagcard__check" aria-hidden="true"></span>
+                <span class="tagcard__name">Certified Strategic Thinker</span>
+                <span class="tagcard__desc">商业敏锐度与趋势洞察</span>
+                <span class="tagcard__chips"><i>看懂趋势</i><i>理解变化</i><i>理解业务</i></span>
+              </label>
+              <label class="tagcard">
+                <input type="radio" name="abilityTag" value="Certified Value Creator" />
+                <span class="tagcard__check" aria-hidden="true"></span>
+                <span class="tagcard__name">Certified Value Creator</span>
+                <span class="tagcard__desc">结果与价值导向</span>
+                <span class="tagcard__chips"><i>把交付变成成果</i></span>
+              </label>
+              <label class="tagcard">
+                <input type="radio" name="abilityTag" value="Certified Team Builder" />
+                <span class="tagcard__check" aria-hidden="true"></span>
+                <span class="tagcard__name">Certified Team Builder</span>
+                <span class="tagcard__desc">带领他人达成结果</span>
+                <span class="tagcard__chips"><i>推动复杂协作</i></span>
+              </label>
+              <label class="tagcard">
+                <input type="radio" name="abilityTag" value="Certified Decision Maker" />
+                <span class="tagcard__check" aria-hidden="true"></span>
+                <span class="tagcard__name">Certified Decision Maker</span>
+                <span class="tagcard__desc">真实情境中的判断与决策</span>
+                <span class="tagcard__chips"><i>没有标准答案</i><i>也能拍板</i></span>
+              </label>
+            </div>
+          </div>
+
           <div class="field">
             <label for="n-address">收件地址 <i>*</i></label>
             <textarea id="n-address" name="address" rows="2" required placeholder="用于寄送神秘包裹，请填写详细收件地址"></textarea>
@@ -675,6 +759,13 @@
             <p class="nposter__lead">本次未生成专属海报</p>
             <small>因为没有上传照片～下次记得上传一张正脸照，就能生成你的专属海报啦</small>
           </div>
+        </div>
+
+        <!-- 酒店预订（内容由 JS 从首页住宿区块克隆，保持单一来源） -->
+        <div class="nstep__hotels">
+          <h4 class="nstep__hotels-title">会议期间住宿预订</h4>
+          <p class="nstep__hotels-sub">大会协议价 · 房量有限，建议尽早预订</p>
+          <div class="hotels__grid" id="nomineeHotels"></div>
         </div>
 
         <p class="nstep__meta">2026 年 6 月 27 日 · 苏州园区香格里拉大酒店</p>
