@@ -705,8 +705,13 @@
   function initModals() {
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
-        var open = document.querySelector('.modal:not([hidden])');
-        if (open) closeModal(open);
+        // 可能同时开多层弹窗（如 Nominee 弹窗内打开授权书），先关最上层
+        var open = Array.prototype.slice.call(document.querySelectorAll('.modal:not([hidden])'));
+        if (!open.length) return;
+        open.sort(function (a, b) {
+          return (parseInt(getComputedStyle(a).zIndex, 10) || 0) - (parseInt(getComputedStyle(b).zIndex, 10) || 0);
+        });
+        closeModal(open[open.length - 1]);
       }
     });
   }
@@ -1069,14 +1074,40 @@
 
     var authBox = document.getElementById('n-auth');
     var authErr = document.getElementById('nAuthErr');
+
+    function clearAuthError() {
+      if (authErr) authErr.hidden = true;
+      var wrap = authBox ? authBox.closest('.nform__agree') : null;
+      if (wrap) wrap.classList.remove('is-invalid');
+    }
+
     if (authBox) {
       authBox.addEventListener('change', function () {
-        if (authBox.checked) {
-          if (authErr) authErr.hidden = true;
-          var wrap = authBox.closest('.nform__agree');
-          if (wrap) wrap.classList.remove('is-invalid');
-        }
+        if (authBox.checked) clearAuthError();
       });
+    }
+
+    // 授权书弹窗：链接打开阅读，「我已阅读并同意」代为勾选
+    var authModal = document.getElementById('authModal');
+    var authOpen = document.getElementById('authOpen');
+    var authModalAgree = document.getElementById('authModalAgree');
+    if (authModal) {
+      if (authOpen) {
+        authOpen.addEventListener('click', function (e) {
+          e.preventDefault(); // 同时阻止外层 label 联动勾选
+          openModal(authModal);
+        });
+      }
+      authModal.querySelectorAll('[data-auth-close]').forEach(function (el) {
+        el.addEventListener('click', function () { closeModal(authModal); });
+      });
+      if (authModalAgree) {
+        authModalAgree.addEventListener('click', function () {
+          if (authBox) authBox.checked = true;
+          clearAuthError();
+          closeModal(authModal);
+        });
+      }
     }
 
     // 必选项（是/否、城市、授权书）校验，返回 true 表示通过

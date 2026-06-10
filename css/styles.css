@@ -935,6 +935,7 @@ body.nom-admin-detail-open { overflow: hidden; }
    ========================================================= */
 body.modal-open { overflow: hidden; }
 .modal { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 22px; }
+.modal--top { z-index: 130; } /* 从弹窗内打开的二级弹窗（如授权书）盖在上层 */
 .modal[hidden] { display: none; }
 .modal__mask { position: absolute; inset: 0; background: rgba(8,4,20,.78); backdrop-filter: blur(8px); animation: maskIn .25s ease both; }
 .modal__panel {

@@ -443,6 +443,54 @@
     </div>
   </div>
 
+  <!-- 肖像、声音、个人信息使用授权书弹窗（需盖在 Nominee 弹窗之上） -->
+  <div class="modal modal--top" id="authModal" hidden>
+    <div class="modal__mask" data-auth-close></div>
+    <div class="modal__panel modal__panel--wide" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <button class="modal__x" type="button" aria-label="关闭" data-auth-close>&times;</button>
+      <h3 class="modal__title" id="authTitle">肖像、声音、个人信息使用授权书</h3>
+      <div class="terms">
+        <p>本人自愿参与品迈（北京）项目管理技术有限公司（“被授权方”）举办的 PMI 中国新锐项目管理精英奖（“本项目”）。本人理解并同意，因本项目评选、公示及宣传推广需要，被授权方有权根据本项目安排对本人进行照片拍摄、录影录像或采访，并在本授权书约定范围内使用本人肖像、声音及相关个人信息。本人现就相关事项作出如下授权与同意：</p>
+
+        <h4>一、授权内容</h4>
+        <ol>
+          <li>本人在此同意并授权被授权方基于本项目评选、公示及宣传推广的目的，收集、使用、编辑、发布和传播以下内容（“授权内容”）：
+            <ul>
+              <li>本人肖像及因录影录像或采访形成的本人声音；</li>
+              <li>本人姓名、任职公司、职务、项目经历、个人经历及本人提供或同意用于本项目宣传的其他个人信息；</li>
+              <li>基于上述内容制作形成的照片、视频、宣传文案、活动物料及其他宣传素材或衍生成果。</li>
+            </ul>
+          </li>
+          <li>本人确认，本人就本项目向被授权方提供的所有信息均真实、准确、完整、有效，不存在任何虚假陈述或隐瞒重要信息的情形，否则本人同意所有评奖结果可被取消，并且本人需承担一切法律后果。</li>
+          <li>本人确认，本人参与本项目的评选及相关宣传活动已取得任职公司的同意，不违反与任职公司之间签署的劳动合同、保密协议或公司其他制度要求，本人向被授权方提供的信息均不涉及未经授权披露的商业秘密或其他保密信息。因本人虚假陈述或违反本授权书承诺而产生的一切法律后果，由本人自行承担。</li>
+        </ol>
+
+        <h4>二、授权性质</h4>
+        <p>本授权为免费、非独占、可转让授权。本人理解并同意，被授权方可自行或委托其他第三方在本授权书约定范围内使用、处理、制作、发布或传播授权内容。但被授权方不得以侮辱、诽谤或其他方式违法使用本人肖像、声音或个人信息，并应当采取合理措施保护本人个人信息安全。</p>
+
+        <h4>三、授权期限及地域范围</h4>
+        <p>本授权自本人在线勾选同意本授权书之日起生效，有效期为永久。本授权的地域范围为全球范围。</p>
+
+        <h4>四、使用方式及衍生成果归属</h4>
+        <ol>
+          <li>本人同意，被授权方可为本项目评选、公示及宣传推广目的，自行或委托其合作方、服务机构，通过线上、线下全渠道（包括但不限于官方网站、社交媒体、新闻稿、广告投放、线下活动等渠道）将授权内容用于商业宣传或市场推广活动。</li>
+          <li>本人同意，被授权方可根据本项目需要，对授权内容进行适当的编辑和技术处理，但该等处理不得损害本人名誉、隐私或其他合法权益。</li>
+          <li>因拍摄、录像、采访或编辑所形成的宣传素材及衍生成果，其著作权及其他相关知识产权由被授权方享有，本人对此无异议。</li>
+        </ol>
+
+        <h4>五、其他</h4>
+        <ol>
+          <li>本人确认，本人已充分阅读、理解并同意本授权书全部内容，本授权书系本人真实、自愿的意思表示。</li>
+          <li>本人在线勾选「我已阅读并同意」即视为本人签署本授权书，本授权书自勾选同意之时起生效。</li>
+        </ol>
+      </div>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" data-auth-close>关闭</button>
+        <button type="button" class="btn btn--gradient" id="authModalAgree">我已阅读并同意</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 弹幕发送确认弹窗 -->
   <div class="modal" id="sendModal" hidden>
     <div class="modal__mask" data-send-close></div>
@@ -579,7 +627,7 @@
           <label class="modal__agree nform__agree" for="n-auth">
             <input type="checkbox" id="n-auth" name="authAgree" />
             <span class="modal__agree-box" aria-hidden="true"></span>
-            <span>我已阅读并同意<a href="assets/authorization-letter.docx" target="_blank" rel="noopener">《肖像、声音、个人信息使用授权书》</a> <i>*</i></span>
+            <span>我已阅读并同意<a href="#" id="authOpen">《肖像、声音、个人信息使用授权书》</a> <i>*</i></span>
           </label>
           <p class="nform__agree-err" id="nAuthErr" hidden>请阅读并勾选同意授权书</p>
           <button type="submit" class="btn btn--lg btn--gradient btn--block">提交信息</button>
