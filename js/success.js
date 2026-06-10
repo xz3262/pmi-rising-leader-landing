@@ -63,7 +63,7 @@
     if (actionsEl) actionsEl.hidden = false;
     if (outroEl) outroEl.hidden = false;
 
-    setText('etType', order.ticketName || 'Standard Ticket');
+    setText('etType', order.ticketName || '——');
     setText('etName', order.name || '——');
     setText('etCompany', order.company || '——');
     setText('etPay', order.payMethodLabel || '——');

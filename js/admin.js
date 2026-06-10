@@ -156,7 +156,7 @@
   function renderNominees(items) {
     if (!items.length) {
       listEl.hidden = true;
-      statusNominees.textContent = '暂无 Nominee 提交记录';
+      statusNominees.textContent = '暂无得奖人提交记录';
       return;
     }
     listEl.hidden = false;
@@ -214,7 +214,7 @@
         statusNominees.textContent = '记录不存在';
         return;
       }
-      detailTitle.textContent = n.name || 'Nominee 详情';
+      detailTitle.textContent = n.name || '得奖人详情';
       if (n.photoDataUrl) {
         detailPhoto.hidden = false;
         detailImg.src = n.photoDataUrl;
@@ -239,6 +239,11 @@
         rowHtml('邮箱', n.email),
         rowHtml('微信', n.wechat),
         rowHtml('收件地址', n.address),
+        rowHtml('现场领奖', n.attendCeremony),
+        rowHtml('接受拍摄', n.acceptInterview === '是' && n.interviewCity
+          ? n.acceptInterview + '（' + n.interviewCity + '）'
+          : n.acceptInterview),
+        rowHtml('授权书', n.authAgreed ? '已同意' : ''),
         rowHtml('提交时间', n.createdAt)
       ].join('');
       detailEl.hidden = false;

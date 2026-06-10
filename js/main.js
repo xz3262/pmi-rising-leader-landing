@@ -157,14 +157,17 @@
      3. 议程时间线
      ========================================================= */
   var AGENDA = [
-    { t: '13:00', title: 'Rising Leader 红毯互动体验', desc: '签到 · 合影 · 暖场' },
-    { t: '14:00', title: '开幕仪式' },
-    { t: '14:15', title: 'PMI 中国区总裁主题演讲' },
-    { t: '14:35', title: 'PMBOK® Guide 第八版发布仪式', hot: true },
-    { t: '14:55', title: '主题演讲' },
-    { t: '15:25', title: '2026 PMI 中国新锐项目管理精英奖颁奖典礼', hot: true, desc: '100 位全国百强新锐管理者加冕' },
-    { t: '16:35', title: 'Fireside Chat 炉边对话' },
-    { t: '18:00', title: 'Rising Leader Night 晚宴', desc: 'VIP 专享 · 交流晚宴' }
+    { t: '13:00–14:00', title: 'Rising Leader 红毯互动体验' },
+    { t: '14:00–14:15', title: '开幕致辞｜重新定义新一代管理者的成长路径', desc: '王梦妍 · PMI 中国区总裁' },
+    { t: '14:15–14:30', title: '苏州市领导致辞' },
+    { t: '14:30–14:50', title: '项目管理理念的时代演进', hot: true, desc: '《项目管理知识体系指南(PMBOK® 指南)第八版》发布仪式' },
+    { t: '14:50–15:05', title: '主题演讲｜读懂商业与趋势，建立前瞻创新的第一步' },
+    { t: '15:05–15:20', title: '主题演讲｜从交付到价值：新一代管理者的必修课' },
+    { t: '15:20–15:35', title: '主题演讲｜没有标准答案，管理者如何做关键决策' },
+    { t: '15:35–16:45', title: '2026 PMI 中国新锐项目管理精英奖颁奖仪式', hot: true },
+    { t: '16:45–17:20', title: 'Fireside Chat｜他们是如何成长为新一代管理者的?', desc: '—— Rising Leader 获奖代表圆桌对话' },
+    { t: '17:20–17:30', title: '大合影' },
+    { t: '18:00–20:00', title: 'Rising Leader Night 新锐管理者交流晚宴（定向邀请）' }
   ];
 
   function buildAgenda() {
@@ -219,8 +222,8 @@
      5. 票种选择 + 价格联动
      ========================================================= */
   var TICKETS = {
-    standard: { price: 399, name: 'Standard Ticket' },
-    vip: { price: 699, name: 'VIP Ticket' },
+    cert: { price: 799, channelPrice: 499, name: '持证人票' },
+    noncert: { price: 999, channelPrice: 699, name: '非持证人票' },
     test: { price: 1, name: 'Test Ticket（支付测试）' },
     free: { price: 0, name: 'Invitation Ticket' }
   };
@@ -235,6 +238,22 @@
   var TEST_INVITE_CODE = 'TEST';
   function isTestInvite(code) {
     return String(code || '').trim().toUpperCase() === TEST_INVITE_CODE;
+  }
+
+  // 渠道码：确认后持证人/非持证人按渠道折扣价结算（与 api/order.js 保持一致）
+  var CHANNEL_INVITE_CODES = ['QD2026'];
+  function isChannelInvite(code) {
+    return CHANNEL_INVITE_CODES.indexOf(String(code || '').trim().toUpperCase()) !== -1;
+  }
+
+  // 渠道折扣是否已生效（confirmInvite 设置，collect 读取）
+  var channelApplied = false;
+
+  // 票面价：渠道码生效时按渠道折扣价结算
+  function effectivePrice(ticketKey) {
+    var t = TICKETS[ticketKey] || TICKETS.cert;
+    if (channelApplied && t.channelPrice) return t.channelPrice;
+    return t.price;
   }
 
   function initTickets() {
@@ -255,7 +274,7 @@
 
     function selectedVal() {
       var v = form.querySelector('input[name="ticket"]:checked');
-      return v ? v.value : 'standard';
+      return v ? v.value : 'cert';
     }
     function selectTicket(value) {
       var radio = form.querySelector('input[name="ticket"][value="' + value + '"]');
@@ -268,14 +287,36 @@
       inviteMsg.className = 'invite__msg' + (kind ? ' invite__msg--' + kind : '');
     }
 
+    // 渠道折扣：刷新票卡上的价格展示（原价划线 + 现价 + 提示行）
+    function syncChannelDisplay() {
+      Object.keys(TICKETS).forEach(function (key) {
+        var t = TICKETS[key];
+        if (!t.channelPrice) return;
+        var card = form.querySelector('.ticket[data-ticket="' + key + '"]');
+        if (!card) return;
+        var orig = card.querySelector('[data-price-orig]');
+        var cur = card.querySelector('[data-price-cur]');
+        var line = card.querySelector('[data-channel-line]');
+        if (orig) orig.hidden = !channelApplied;
+        if (cur) cur.textContent = '¥' + (channelApplied ? t.channelPrice : t.price);
+        if (line) {
+          line.classList.toggle('ticket__channel--on', channelApplied);
+          line.innerHTML = channelApplied
+            ? '渠道折扣价 <b>¥' + t.channelPrice + '</b> · 渠道码已生效'
+            : '渠道折扣价 <b>¥' + t.channelPrice + '</b> · 凭渠道码享受';
+        }
+      });
+    }
+
     // 票种 → 合计金额 + 支付区 / 免费领取区切换
     function syncMode() {
       var val = selectedVal();
-      var ticket = TICKETS[val] || TICKETS.standard;
-      if (totalEl) totalEl.textContent = ticket.price > 0 ? ('¥' + ticket.price) : '免费';
+      var price = effectivePrice(val);
+      if (totalEl) totalEl.textContent = price > 0 ? ('¥' + price) : '免费';
       var isFree = (val === 'free');
       if (payWrap) payWrap.hidden = isFree;
       if (freeClaim) freeClaim.hidden = !isFree;
+      syncChannelDisplay();
     }
 
     var freeRadio = freeTicket ? freeTicket.querySelector('input[name="ticket"]') : null;
@@ -286,7 +327,7 @@
       inviteOk = false;
       if (freeTicket) freeTicket.hidden = true;
       if (freeRadio) freeRadio.disabled = true;
-      if (selectedVal() === 'free') selectTicket('standard');
+      if (selectedVal() === 'free') selectTicket('cert');
       syncMode();
     }
 
@@ -295,21 +336,29 @@
       inviteTestOk = false;
       if (testTicket) testTicket.hidden = true;
       if (testRadio) testRadio.disabled = true;
-      if (selectedVal() === 'test') selectTicket('standard');
+      if (selectedVal() === 'test') selectTicket('cert');
+      syncMode();
+    }
+
+    // 取消渠道折扣
+    function lockChannel() {
+      channelApplied = false;
       syncMode();
     }
 
     function lockInvites() {
       lockFree();
       lockTest();
+      lockChannel();
     }
 
-    // 点击「确认」才校验邀请码并解锁对应票种
+    // 点击「确认」才校验邀请码并解锁对应票种 / 折扣
     function confirmInvite() {
       var code = inviteEl ? inviteEl.value.trim() : '';
-      if (!code) { lockInvites(); setInviteMsg('请输入邀请码', 'err'); return; }
+      if (!code) { lockInvites(); setInviteMsg('请输入邀请码或渠道码', 'err'); return; }
       if (isFreeInvite(code)) {
         lockTest();
+        lockChannel();
         inviteOk = true;
         if (freeCodeLabel) freeCodeLabel.textContent = code.toUpperCase();
         if (freeTicket) freeTicket.hidden = false;
@@ -319,11 +368,19 @@
         syncMode();
       } else if (isTestInvite(code)) {
         lockFree();
+        lockChannel();
         inviteTestOk = true;
         if (testTicket) testTicket.hidden = false;
         if (testRadio) testRadio.disabled = false;
         selectTicket('test');
         setInviteMsg('邀请码有效，已为你解锁测试票', 'ok');
+        syncMode();
+      } else if (isChannelInvite(code)) {
+        lockFree();
+        lockTest();
+        channelApplied = true;
+        if (selectedVal() !== 'cert' && selectedVal() !== 'noncert') selectTicket('cert');
+        setInviteMsg('渠道码有效，已按渠道折扣价结算', 'ok');
         syncMode();
       } else {
         lockInvites();
@@ -336,7 +393,7 @@
     if (inviteEl) {
       // 确认后再修改邀请码，需重新确认
       inviteEl.addEventListener('input', function () {
-        if (inviteOk || inviteTestOk) lockInvites();
+        if (inviteOk || inviteTestOk || channelApplied) lockInvites();
         setInviteMsg('', null);
       });
       inviteEl.addEventListener('keydown', function (e) {
@@ -352,6 +409,60 @@
   /* =========================================================
      6. 表单校验 + 支付占位跳转（微信 / 支付宝）
      ========================================================= */
+  // 注册须知：未勾选同意则拦截支付 / 领票
+  function termsAgreed(form) {
+    var agree = document.getElementById('regAgree');
+    var err = document.getElementById('regAgreeErr');
+    var ok = !!(agree && agree.checked);
+    if (err) err.hidden = ok;
+    if (!ok && agree) {
+      var wrap = agree.closest('.reg__agree');
+      if (wrap) {
+        wrap.classList.add('is-invalid');
+        wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+    return ok;
+  }
+
+  function initTerms() {
+    var modal = document.getElementById('termsModal');
+    var openLink = document.getElementById('termsOpen');
+    var agreeBtn = document.getElementById('termsAgree');
+    var agree = document.getElementById('regAgree');
+    var err = document.getElementById('regAgreeErr');
+    if (!modal) return;
+    if (openLink) {
+      openLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        openModal(modal);
+      });
+    }
+    modal.querySelectorAll('[data-terms-close]').forEach(function (el) {
+      el.addEventListener('click', function () { closeModal(modal); });
+    });
+    if (agreeBtn) {
+      agreeBtn.addEventListener('click', function () {
+        if (agree) {
+          agree.checked = true;
+          var wrap = agree.closest('.reg__agree');
+          if (wrap) wrap.classList.remove('is-invalid');
+        }
+        if (err) err.hidden = true;
+        closeModal(modal);
+      });
+    }
+    if (agree) {
+      agree.addEventListener('change', function () {
+        var wrap = agree.closest('.reg__agree');
+        if (agree.checked) {
+          if (wrap) wrap.classList.remove('is-invalid');
+          if (err) err.hidden = true;
+        }
+      });
+    }
+  }
+
   function initForm() {
     var form = document.getElementById('regForm');
     if (!form) return;
@@ -394,6 +505,7 @@
       if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
+    if (!termsAgreed(form)) return;
 
     var data = collect(form, payMethod);
 
@@ -438,6 +550,7 @@
       if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
+    if (!termsAgreed(form)) return;
     if (!isFreeInvite(form.invite.value)) {
       window.alert('邀请码无效，请确认后重试');
       return;
@@ -503,8 +616,8 @@
 
   function collect(form, payMethod) {
     var t = form.querySelector('input[name="ticket"]:checked');
-    var ticket = t && TICKETS[t.value] ? t.value : 'standard';
-    var ticketInfo = TICKETS[ticket] || TICKETS.standard;
+    var ticket = t && TICKETS[t.value] ? t.value : 'cert';
+    var ticketInfo = TICKETS[ticket] || TICKETS.cert;
     var method = payMethod === 'free' ? 'free' : (payMethod === 'alipay' ? 'alipay' : 'wxpay');
     return {
       name: form.name.value.trim(),
@@ -518,7 +631,8 @@
       invite: form.invite.value.trim(),
       ticket: ticket,
       ticketName: ticketInfo.name,
-      price: ticketInfo.price,
+      price: effectivePrice(ticket),
+      agreeTerms: true,
       payMethod: method,
       payMethodLabel: PAY_LABELS[method],
       orderId: 'RL2026-' + String(((phoneDigits(form.phone.value) || '000000').slice(-6)) + Math.floor(Date.now() % 10000)).padStart(10, '0')
@@ -818,7 +932,12 @@
     }
 
     document.querySelectorAll('[data-nominee-open]').forEach(function (b) {
-      b.addEventListener('click', function () { resetPoster(); show(1); openModal(modal); });
+      b.addEventListener('click', function () {
+        resetPoster();
+        show(1);
+        syncInterviewCity(); // 重开弹窗时同步「所在城市」显隐，与已选项保持一致
+        openModal(modal);
+      });
     });
     modal.querySelectorAll('[data-nominee-close]').forEach(function (el) {
       el.addEventListener('click', function () { closeModal(modal); });
@@ -919,8 +1038,72 @@
       nposterRetry.addEventListener('click', function () { if (nomineeId) generatePoster(); });
     }
 
-    // 注册信息提交 → 入库 → 感谢页
+    // 接受拍摄选「是」时，弹出所在城市填写
+    var interviewCityField = document.getElementById('interviewCityField');
+    var interviewCityInput = document.getElementById('n-interview-city');
     var nform = document.getElementById('nomineeForm');
+
+    function interviewVal() {
+      return nform && nform.elements.interview ? String(nform.elements.interview.value || '') : '';
+    }
+
+    function syncInterviewCity() {
+      if (!interviewCityField) return;
+      var yes = interviewVal() === '是';
+      interviewCityField.hidden = !yes;
+      if (!yes && interviewCityInput) {
+        interviewCityInput.value = '';
+        interviewCityInput.classList.remove('is-invalid');
+      }
+    }
+
+    if (nform) {
+      nform.querySelectorAll('input[name="interview"], input[name="attend"]').forEach(function (r) {
+        r.addEventListener('change', function () {
+          var wrap = r.closest('.field--choice');
+          if (wrap) wrap.classList.remove('is-invalid');
+          syncInterviewCity();
+        });
+      });
+    }
+
+    var authBox = document.getElementById('n-auth');
+    var authErr = document.getElementById('nAuthErr');
+    if (authBox) {
+      authBox.addEventListener('change', function () {
+        if (authBox.checked) {
+          if (authErr) authErr.hidden = true;
+          var wrap = authBox.closest('.nform__agree');
+          if (wrap) wrap.classList.remove('is-invalid');
+        }
+      });
+    }
+
+    // 必选项（是/否、城市、授权书）校验，返回 true 表示通过
+    function validateNomineeExtras() {
+      var ok = true;
+      var firstBad = null;
+      ['attend', 'interview'].forEach(function (name) {
+        var wrap = nform.querySelector('.field--choice[data-choice="' + name + '"]');
+        var missing = !nform.elements[name] || !String(nform.elements[name].value || '');
+        if (wrap) wrap.classList.toggle('is-invalid', missing);
+        if (missing) { ok = false; firstBad = firstBad || wrap; }
+      });
+      if (interviewVal() === '是' && interviewCityInput && !interviewCityInput.value.trim()) {
+        interviewCityInput.classList.add('is-invalid');
+        ok = false;
+        firstBad = firstBad || interviewCityInput;
+      }
+      var authMissing = !authBox || !authBox.checked;
+      if (authErr) authErr.hidden = !authMissing;
+      var authWrap = authBox ? authBox.closest('.nform__agree') : null;
+      if (authWrap) authWrap.classList.toggle('is-invalid', authMissing);
+      if (authMissing) { ok = false; firstBad = firstBad || authWrap; }
+      if (!ok && firstBad) firstBad.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return ok;
+    }
+
+    // 注册信息提交 → 入库 → 感谢页
     if (nform) {
       nform.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -938,6 +1121,7 @@
           }
           return;
         }
+        if (!validateNomineeExtras()) return;
         var submitBtn = nform.querySelector('[type="submit"]');
         if (submitBtn) submitBtn.disabled = true;
         setNomineeUploading(true, '正在处理照片…', '大图会自动压缩，请稍候');
@@ -958,6 +1142,10 @@
                 email: nform.email.value.trim(),
                 wechat: nform.wechat ? nform.wechat.value.trim() : '',
                 address: nform.address.value.trim(),
+                attend_ceremony: String((nform.elements.attend && nform.elements.attend.value) || ''),
+                accept_interview: interviewVal(),
+                interview_city: interviewCityInput ? interviewCityInput.value.trim() : '',
+                auth_agreed: !!(authBox && authBox.checked),
                 photo_mime: photoData.photo_mime,
                 photo_base64: photoData.photo_base64
               })
@@ -1092,6 +1280,7 @@
     initNav();
     initTickets();
     initForm();
+    initTerms();
     initModals();
     initBarrage();
     initNominee();

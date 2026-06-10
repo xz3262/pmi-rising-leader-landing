@@ -7,8 +7,8 @@ const { insertOrder, markOrderPaid } = require('../lib/db');
 const { parseBody, json, requestMeta } = require('../lib/http');
 
 var TICKETS = {
-  standard: { price: 399, name: 'Standard Ticket' },
-  vip: { price: 699, name: 'VIP Ticket' },
+  cert: { price: 799, channelPrice: 499, name: '持证人票' },
+  noncert: { price: 999, channelPrice: 699, name: '非持证人票' },
   test: { price: 1, name: 'Test Ticket（支付测试）' },
   free: { price: 0, name: 'Invitation Ticket' }
 };
@@ -24,6 +24,12 @@ function isFreeInvite(code) {
 var TEST_INVITE_CODE = 'TEST';
 function isTestInvite(code) {
   return String(code || '').trim().toUpperCase() === TEST_INVITE_CODE;
+}
+
+// 渠道码：持证人/非持证人按渠道折扣价结算（与 js/main.js 保持一致）
+var CHANNEL_INVITE_CODES = ['QD2026'];
+function isChannelInvite(code) {
+  return CHANNEL_INVITE_CODES.indexOf(String(code || '').trim().toUpperCase()) !== -1;
 }
 
 function generateOrderId() {
@@ -49,6 +55,7 @@ function validateBody(body) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(body.email || '').trim())) errors.push('请填写正确邮箱');
   if (!body.industry || !String(body.industry).trim()) errors.push('请选择行业');
   if (!TICKETS[body.ticket]) errors.push('请选择票种');
+  if (body.agreeTerms !== true) errors.push('请先阅读并同意《注册须知》');
   if (body.ticket === 'free') {
     if (!isFreeInvite(body.invite)) errors.push('邀请码无效');
   } else if (body.ticket === 'test') {
@@ -74,7 +81,10 @@ module.exports = async function handler(req, res) {
 
   var ticket = body.ticket;
   var ticketInfo = TICKETS[ticket];
-  var price = ticketInfo.price;
+  // 渠道码生效时按渠道折扣价结算（以服务端校验为准，不信任前端传来的价格）
+  var price = (isChannelInvite(body.invite) && ticketInfo.channelPrice)
+    ? ticketInfo.channelPrice
+    : ticketInfo.price;
   var ticketName = ticketInfo.name;
   var isFree = ticket === 'free';
   var payMethod = isFree ? 'free' : body.payMethod;

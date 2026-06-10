@@ -357,7 +357,7 @@ body::before {
    议程时间线
    ========================================================= */
 .timeline {
-  --tl-time: 76px;
+  --tl-time: 110px;
   --tl-track: 28px;
   --tl-gap: 20px;
   position: relative; max-width: 760px; margin: 0 auto;
@@ -379,8 +379,8 @@ body::before {
   padding: 14px 0;
 }
 .tl__time {
-  text-align: right; font-weight: 700; font-size: 16px; color: var(--text);
-  padding-top: 18px; padding-right: 4px;
+  text-align: right; font-weight: 700; font-size: 14.5px; color: var(--text);
+  padding-top: 20px; padding-right: 4px; white-space: nowrap; letter-spacing: -.01em;
 }
 .tl__dot {
   position: relative; justify-self: center; align-self: start;
@@ -398,6 +398,9 @@ body::before {
 .tl__title { font-size: 17px; font-weight: 600; }
 .tl__title.is-highlight { background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 700; }
 .tl__desc { font-size: 13.5px; color: var(--text-muted); margin-top: 4px; }
+
+/* 议程脚注：最终议程以现场为准 */
+.agenda__note { max-width: 760px; margin: 20px auto 0; text-align: right; font-size: 13px; color: var(--text-muted); }
 
 /* =========================================================
    报名
@@ -418,8 +421,8 @@ body::before {
 .field-row .field { margin-bottom: 0; }
 .field-row + .field-row,
 .field-row + .field { margin-top: 16px; }
-.field label { display: block; font-size: 13.5px; font-weight: 500; color: var(--text-soft); margin-bottom: 7px; }
-.field label i { color: var(--pink); font-style: normal; }
+.field label, .field .field__label { display: block; font-size: 13.5px; font-weight: 500; color: var(--text-soft); margin-bottom: 7px; }
+.field label i, .field .field__label i { color: var(--pink); font-style: normal; }
 .field input, .field select {
   width: 100%; padding: 13px 15px; border-radius: 12px;
   background: rgba(16,10,34,.6); border: 1px solid var(--line-strong); color: var(--text);
@@ -488,6 +491,13 @@ body::before {
 .ticket__tag--free { background: linear-gradient(135deg, #1ac08a, #12a9b8); }
 .ticket__price--free { -webkit-text-fill-color: initial; background: none; color: #2fe0a6; }
 
+/* 渠道折扣价：原价划线 + 折扣提示行 */
+.ticket__price-orig { font-size: 15px; font-weight: 600; color: var(--text-muted); text-decoration: line-through; }
+.ticket__channel { margin: -6px 0 14px; font-size: 12.5px; color: var(--text-muted); }
+.ticket__channel b { font-weight: 700; color: var(--lavender); }
+.ticket__channel--on { color: #2fe0a6; }
+.ticket__channel--on b { color: #2fe0a6; }
+
 .ticket:has(input:checked) { border-color: var(--pink); box-shadow: 0 0 0 1px var(--pink), 0 20px 50px -20px rgba(224,53,154,.6); transform: translateY(-3px); }
 .ticket:has(input:checked) .ticket__check { border-color: var(--pink); background: var(--grad-full); box-shadow: inset 0 0 0 4px var(--card); }
 
@@ -530,6 +540,12 @@ body::before {
 .reg__total b { font-size: 30px; font-weight: 800; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .reg__note { margin-top: 14px; font-size: 12.5px; color: var(--text-muted); text-align: center; line-height: 1.6; }
 .reg__free .reg__note b { color: #2fe0a6; font-weight: 700; letter-spacing: .04em; }
+
+/* 注册须知勾选（合计与支付按钮之间） */
+.reg__agree { margin-bottom: 14px; font-size: 13.5px; }
+.reg__agree a { color: var(--pink); text-decoration: underline; text-underline-offset: 3px; }
+.reg__agree.is-invalid .modal__agree-box { border-color: #ff5470; box-shadow: 0 0 0 3px rgba(255,84,112,.16); }
+.reg__agree-err { margin: -6px 0 12px 31px; font-size: 12.5px; color: #ff6b8a; }
 
 /* =========================================================
    页脚
@@ -963,6 +979,17 @@ body.modal-open { overflow: hidden; }
 .modal__actions .btn { flex: 1; }
 .btn[disabled] { opacity: .45; cursor: not-allowed; pointer-events: none; }
 
+/* 注册须知弹窗（宽版 + 长文排版） */
+.modal__panel--wide { max-width: 640px; }
+.terms { text-align: left; font-size: 14px; color: var(--text-soft); line-height: 1.8; }
+.terms p { margin-bottom: 12px; }
+.terms h4 { margin: 20px 0 10px; font-size: 15.5px; font-weight: 700; color: var(--text); }
+.terms ol, .terms ul { margin: 0 0 12px; padding-left: 22px; display: grid; gap: 8px; }
+.terms ol { list-style: decimal; }
+.terms ul { list-style: disc; }
+.terms li { font-size: 13.5px; line-height: 1.7; }
+.terms__sign { margin-top: 22px; text-align: right; color: var(--text-muted); }
+
 /* =========================================================
    Nominee 获奖流程弹窗
    ========================================================= */
@@ -1012,6 +1039,33 @@ body.modal-open { overflow: hidden; }
 .nform textarea:focus { outline: none; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255,77,141,.18); background: rgba(16,10,34,.85); }
 .nform textarea.is-invalid { border-color: #ff5470; box-shadow: 0 0 0 3px rgba(255,84,112,.16); }
 .nform .btn { margin-top: 8px; }
+
+/* 是/否 选项（现场领奖 / 接受拍摄） */
+.field--choice .choice { display: flex; gap: 10px; }
+.choice__opt { flex: 1; position: relative; cursor: pointer; }
+.choice__opt input { position: absolute; opacity: 0; width: 0; height: 0; }
+.choice__opt span {
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px 0; border-radius: 12px;
+  background: rgba(16,10,34,.6); border: 1px solid var(--line-strong);
+  font-size: 14.5px; color: var(--text-soft);
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
+}
+.choice__opt:hover span { border-color: var(--lavender); }
+.choice__opt input:checked + span {
+  border-color: var(--pink); color: var(--text);
+  background: rgba(224,53,154,.14);
+  box-shadow: 0 0 0 3px rgba(255,77,141,.15);
+}
+.choice__opt input:focus-visible + span { box-shadow: 0 0 0 3px rgba(255,77,141,.3); }
+.field--choice.is-invalid .choice__opt span { border-color: #ff5470; box-shadow: 0 0 0 3px rgba(255,84,112,.16); }
+
+/* 授权书勾选 */
+.nform__agree { margin: 4px 0 6px; font-size: 13.5px; text-align: left; }
+.nform__agree a { color: var(--pink); text-decoration: underline; text-underline-offset: 3px; }
+.nform__agree i { color: var(--pink); font-style: normal; }
+.nform__agree.is-invalid .modal__agree-box { border-color: #ff5470; box-shadow: 0 0 0 3px rgba(255,84,112,.16); }
+.nform__agree-err { margin: 0 0 6px 31px; font-size: 12.5px; color: #ff6b8a; text-align: left; }
 
 /* 照片上传 */
 .nform__photo { display: flex; justify-content: center; margin-bottom: 8px; }

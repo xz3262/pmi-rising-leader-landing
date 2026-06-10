@@ -10,6 +10,10 @@ function isValidPhone(raw) {
   return digits.length >= 5 && digits.length <= 20;
 }
 
+function isYesNo(v) {
+  return v === '是' || v === '否';
+}
+
 function validateNominee(body) {
   var errors = [];
   if (!body.name || !String(body.name).trim()) errors.push('请填写姓名');
@@ -18,6 +22,13 @@ function validateNominee(body) {
   if (!isValidPhone(body.phone)) errors.push('请填写正确手机号');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(body.email || '').trim())) errors.push('请填写正确邮箱');
   if (!body.address || !String(body.address).trim()) errors.push('请填写收件地址');
+  if (!isYesNo(String(body.attend_ceremony || '').trim())) errors.push('请确认是否现场参加颁奖典礼并领奖');
+  var interview = String(body.accept_interview || '').trim();
+  if (!isYesNo(interview)) errors.push('请确认是否愿意接受视频采访拍摄');
+  if (interview === '是' && (!body.interview_city || !String(body.interview_city).trim())) {
+    errors.push('请填写所在城市');
+  }
+  if (body.auth_agreed !== true) errors.push('请先同意《肖像、声音、个人信息使用授权书》');
   if (!body.photo_base64 || !String(body.photo_base64).trim()) {
     errors.push('请上传个人照片');
   } else if (String(body.photo_base64).length > 4000000) {
@@ -49,6 +60,10 @@ module.exports = async function handler(req, res) {
       email: String(body.email).trim(),
       wechat: String(body.wechat || '').trim(),
       address: String(body.address).trim(),
+      attend_ceremony: String(body.attend_ceremony || '').trim(),
+      accept_interview: String(body.accept_interview || '').trim(),
+      interview_city: String(body.interview_city || '').trim(),
+      auth_agreed: body.auth_agreed === true ? 1 : 0,
       photo_mime: String(body.photo_mime || '').trim(),
       photo_base64: String(body.photo_base64 || '').trim(),
       client_ip: meta.clientIp,
