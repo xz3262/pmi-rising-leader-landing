@@ -1,5 +1,44 @@
-const { insertNominee } = require('../lib/db');
+const { insertNominee, insertOrder, markOrderPaid } = require('../lib/db');
 const { parseBody, json, requestMeta } = require('../lib/http');
+
+// 提名嘉宾免费入场票：与购票出票同一套订单/验票体系，票号可被检票系统扫验
+var NOMINEE_TICKET_NAME = '百强新锐提名嘉宾票';
+
+function generateNomineeOrderId() {
+  var suffix = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  return ('RLN2026' + Date.now() + suffix).slice(0, 32);
+}
+
+// 出票失败不阻断信息提交：返回空票号，前端隐藏二维码区块
+async function issueNomineeTicket(body, meta) {
+  var orderNo = generateNomineeOrderId();
+  await insertOrder({
+    merchant_order_no: orderNo,
+    name: String(body.name).trim(),
+    nickname: String(body.nickname || '').trim(),
+    company: String(body.company).trim(),
+    title: String(body.title).trim(),
+    phone: String(body.phone).trim(),
+    email: String(body.email).trim(),
+    wechat: String(body.wechat || '').trim(),
+    industry: '',
+    invite: 'NOMINEE',
+    ticket: 'nominee',
+    ticket_name: NOMINEE_TICKET_NAME,
+    product_name: 'PMI Rising Leader 2026 ' + NOMINEE_TICKET_NAME,
+    price: 0,
+    pay_method: 'free',
+    client_ip: meta.clientIp,
+    user_agent: meta.userAgent
+  });
+  await markOrderPaid(orderNo, {
+    transaction_no: 'NOMINEE-' + orderNo,
+    zpay_type: 'nominee',
+    paid_money: 0,
+    buyer: 'NOMINEE'
+  }, 'free');
+  return orderNo;
+}
 
 // 手机号：含国际号码，前端会拼成「+区号 号码」。位数不固定，
 // 只要求可选 + 开头、5~20 位数字（去掉空格/连字符后）。
@@ -73,6 +112,15 @@ module.exports = async function handler(req, res) {
 
   var meta = requestMeta(req);
 
+  // 先出入场票（免费票直接置为已支付），拿到票号后随提名信息一并入库
+  var ticketOrderNo = '';
+  try {
+    ticketOrderNo = await issueNomineeTicket(body, meta);
+  } catch (err) {
+    console.error('[nominee] ticket issue failed', err);
+    ticketOrderNo = '';
+  }
+
   try {
     var id = await insertNominee({
       name: String(body.name).trim(),
@@ -92,13 +140,14 @@ module.exports = async function handler(req, res) {
       one_line_intro: String(body.one_line_intro || '').trim(),
       ability_tag: String(body.ability_tag || '').trim(),
       auth_agreed: body.auth_agreed === true ? 1 : 0,
+      ticket_order_no: ticketOrderNo,
       photo_mime: String(body.photo_mime || '').trim(),
       photo_base64: String(body.photo_base64 || '').trim(),
       photo_thumb_base64: String(body.photo_thumb_base64 || '').trim(),
       client_ip: meta.clientIp,
       user_agent: meta.userAgent
     });
-    return json(res, 200, { ok: true, id: id });
+    return json(res, 200, { ok: true, id: id, ticketOrderNo: ticketOrderNo });
   } catch (err) {
     console.error('[nominee] insert failed', err);
     return json(res, 500, { error: '提交失败，请稍后重试' });

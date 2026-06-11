@@ -766,6 +766,16 @@
         <h3 class="nstep__title">感谢填写！</h3>
         <p class="nstep__text">期待与您在 PMI Rising Leader 2026 见面！</p>
 
+        <!-- 入场二维码（与购票出票同一套订单/验票体系） -->
+        <div class="nticket" id="nticket" hidden>
+          <p class="nticket__lead">你的专属入场二维码 🎟️</p>
+          <img class="nticket__qr" id="nticketQr" alt="入场二维码" width="200" height="200" decoding="async" />
+          <p class="nticket__no">票号：<span id="nticketNo"></span></p>
+          <p class="nticket__warn">请务必保存此二维码，大会现场凭码检票入场</p>
+          <a class="btn btn--gradient btn--block" id="nticketSave" download="PMI-Rising-Leader-入场二维码.png">保存入场二维码</a>
+          <small class="nticket__tip">手机端可长按上方二维码保存到相册</small>
+        </div>
+
         <!-- 专属海报（AI 生成 + 前端合成模板） -->
         <div class="nposter" id="nposter" hidden>
           <div class="nposter__loading" id="nposterLoading">

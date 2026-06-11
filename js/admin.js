@@ -247,6 +247,7 @@
         detailLoadFull.textContent = n.hasPoster ? '查看原图与海报' : '查看原图';
       }
       detailRows.innerHTML = [
+        rowHtml('姓名', n.name),
         rowHtml('昵称', n.nickname),
         rowHtml('公司', n.company),
         rowHtml('职务', n.title),
@@ -263,6 +264,7 @@
         rowHtmlLong('解决过最复杂的问题', n.complexProblem),
         rowHtmlLong('一句话介绍自己', n.oneLineIntro),
         rowHtml('能力标签', n.abilityTag),
+        rowHtml('入场票号', n.ticketOrderNo),
         rowHtml('授权书', n.authAgreed ? '已同意' : ''),
         rowHtml('提交时间', n.createdAt)
       ].join('');

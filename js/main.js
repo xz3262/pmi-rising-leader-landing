@@ -1006,6 +1006,26 @@
       posterStarted = false;
       if (nposter) nposter.hidden = true;
       if (nposterImg) nposterImg.removeAttribute('src');
+      if (nticket) nticket.hidden = true;
+      if (nticketQr) nticketQr.removeAttribute('src');
+    }
+
+    // ---- 入场二维码（与购票成功页同一套 /v/票号 验票链接） ----
+    var nticket = document.getElementById('nticket');
+    var nticketQr = document.getElementById('nticketQr');
+    var nticketNo = document.getElementById('nticketNo');
+    var nticketSave = document.getElementById('nticketSave');
+
+    function showNomineeTicket(orderNo) {
+      if (!nticket || !nticketQr || !orderNo) return;
+      var verifyUrl = window.location.origin + '/v/' + encodeURIComponent(orderNo);
+      var dpr = Math.min(window.devicePixelRatio || 2, 3);
+      var renderPx = Math.round(200 * dpr);
+      var qrUrl = '/api/qr?w=' + renderPx + '&data=' + encodeURIComponent(verifyUrl);
+      nticketQr.src = qrUrl;
+      if (nticketNo) nticketNo.textContent = orderNo;
+      if (nticketSave) nticketSave.href = qrUrl;
+      nticket.hidden = false;
     }
 
     function generatePoster() {
@@ -1214,6 +1234,7 @@
             if (!res.ok || !res.body.ok) throw new Error((res.body && res.body.error) || '提交失败');
             nomineeId = Number(res.body.id || 0);
             show(4);
+            showNomineeTicket(String(res.body.ticketOrderNo || ''));
             if (nomineeId && !posterStarted) { posterStarted = true; generatePoster(); }
           })
           .catch(function (err) {
