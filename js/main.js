@@ -1077,14 +1077,21 @@
     var hotelsDst = document.getElementById('nomineeHotels');
     if (hotelsSrc && hotelsDst) hotelsDst.innerHTML = hotelsSrc.innerHTML;
 
-    // 「最自豪的管理决策」字数实时统计（上限 2000 字）
+    // 三道问答题的字数实时统计
     var proudInput = document.getElementById('n-proud-decision');
-    var proudCount = document.getElementById('proudCount');
-    if (proudInput && proudCount) {
-      proudInput.addEventListener('input', function () {
-        proudCount.textContent = String(proudInput.value.length);
+    var complexInput = document.getElementById('n-complex-problem');
+    var introInput = document.getElementById('n-one-line-intro');
+    [
+      [proudInput, document.getElementById('proudCount')],
+      [complexInput, document.getElementById('complexCount')],
+      [introInput, document.getElementById('introCount')]
+    ].forEach(function (pair) {
+      var input = pair[0], count = pair[1];
+      if (!input || !count) return;
+      input.addEventListener('input', function () {
+        count.textContent = String(input.value.length);
       });
-    }
+    });
 
     var authBox = document.getElementById('n-auth');
     var authErr = document.getElementById('nAuthErr');
@@ -1192,6 +1199,8 @@
                 interview_city: interviewCityInput ? interviewCityInput.value.trim() : '',
                 accept_ceremony_interview: String((nform.elements.interviewLive && nform.elements.interviewLive.value) || ''),
                 proud_decision: proudInput ? proudInput.value.trim() : '',
+                complex_problem: complexInput ? complexInput.value.trim() : '',
+                one_line_intro: introInput ? introInput.value.trim() : '',
                 ability_tag: String((nform.elements.abilityTag && nform.elements.abilityTag.value) || ''),
                 auth_agreed: !!(authBox && authBox.checked),
                 photo_mime: photoData.photo_mime,

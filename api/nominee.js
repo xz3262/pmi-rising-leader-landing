@@ -39,6 +39,12 @@ function validateNominee(body) {
   var proud = String(body.proud_decision || '').trim();
   if (!proud) errors.push('请填写「过去一年最自豪的一次管理决策」');
   else if (proud.length > 2000) errors.push('「最自豪的管理决策」请控制在 2000 字以内');
+  var complexProblem = String(body.complex_problem || '').trim();
+  if (!complexProblem) errors.push('请填写「你解决过最复杂的问题」');
+  else if (complexProblem.length > 2000) errors.push('「解决过最复杂的问题」请控制在 2000 字以内');
+  var oneLineIntro = String(body.one_line_intro || '').trim();
+  if (!oneLineIntro) errors.push('请填写「一句话介绍自己」');
+  else if (oneLineIntro.length > 200) errors.push('「一句话介绍自己」请控制在 200 字以内');
   if (ABILITY_TAGS.indexOf(String(body.ability_tag || '').trim()) === -1) {
     errors.push('请选择你最认同的能力标签');
   }
@@ -82,6 +88,8 @@ module.exports = async function handler(req, res) {
       interview_city: String(body.interview_city || '').trim(),
       accept_ceremony_interview: String(body.accept_ceremony_interview || '').trim(),
       proud_decision: String(body.proud_decision || '').trim(),
+      complex_problem: String(body.complex_problem || '').trim(),
+      one_line_intro: String(body.one_line_intro || '').trim(),
       ability_tag: String(body.ability_tag || '').trim(),
       auth_agreed: body.auth_agreed === true ? 1 : 0,
       photo_mime: String(body.photo_mime || '').trim(),

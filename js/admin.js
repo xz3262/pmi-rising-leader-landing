@@ -260,6 +260,8 @@
           : n.acceptInterview),
         rowHtml('典礼期间拍摄', n.acceptCeremonyInterview),
         rowHtmlLong('最自豪的管理决策', n.proudDecision),
+        rowHtmlLong('解决过最复杂的问题', n.complexProblem),
+        rowHtmlLong('一句话介绍自己', n.oneLineIntro),
         rowHtml('能力标签', n.abilityTag),
         rowHtml('授权书', n.authAgreed ? '已同意' : ''),
         rowHtml('提交时间', n.createdAt)
