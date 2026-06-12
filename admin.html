@@ -35,16 +35,24 @@
       </section>
 
       <section class="admin-hub__panel" id="adminPanelOrders" hidden>
+        <div class="ord-admin__toolbar">
+          <input class="admin-hub__gate-input ord-admin__search" id="ordAdminSearch" type="search"
+                 autocomplete="off" placeholder="按姓名 / 手机 / 邮箱 / 公司 / 订单号搜索" />
+        </div>
         <p class="admin-hub__status" id="adminStatusOrders"></p>
+        <p class="ord-admin__hint" id="ordAdminHint" hidden>点击任意一行可查看完整购票信息与入场二维码</p>
         <div class="ord-admin__table-wrap" id="ordAdminTableWrap" hidden>
           <table class="ord-admin__table">
             <thead>
               <tr>
                 <th>购票人</th>
                 <th>公司 · 岗位</th>
+                <th>手机</th>
+                <th>邮箱</th>
                 <th>票种</th>
                 <th>类型</th>
                 <th>金额</th>
+                <th>验票</th>
                 <th>购买时间</th>
                 <th>订单号</th>
               </tr>
@@ -69,6 +77,19 @@
       </div>
       <button type="button" class="btn btn--sm btn--ghost btn--block" id="nomAdminLoadFull" hidden>查看原图与海报</button>
       <div class="nom-admin-detail__rows" id="nomAdminDetailRows"></div>
+    </div>
+  </div>
+
+  <div class="nom-admin-detail" id="ordAdminDetail" hidden>
+    <div class="nom-admin-detail__mask" data-ord-admin-close></div>
+    <div class="nom-admin-detail__panel" role="dialog" aria-modal="true" aria-labelledby="ordAdminDetailTitle">
+      <button class="modal__x" type="button" aria-label="关闭" data-ord-admin-close>&times;</button>
+      <h2 class="nom-admin-detail__title" id="ordAdminDetailTitle">订单详情</h2>
+      <div class="ord-admin-detail__qr" id="ordAdminDetailQrWrap" hidden>
+        <img id="ordAdminDetailQr" alt="入场验票二维码" width="220" height="220" decoding="async" />
+        <p class="ord-admin-detail__qr-tip">入场验票二维码（与购票人收到的一致）</p>
+      </div>
+      <div class="nom-admin-detail__rows" id="ordAdminDetailRows"></div>
     </div>
   </div>
 

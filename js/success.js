@@ -72,15 +72,16 @@
     setText('etCompany', order.company || '——');
     setText('etPay', order.payMethodLabel || '——');
     var ticketOrderId = order.merchantOrderNo || order.orderId || orderId;
-    showVerifyQR(ticketOrderId);
+    showVerifyQR(ticketOrderId, order.verifyUrl || '');
   }
 
-  function showVerifyQR(ticketOrderId) {
+  function showVerifyQR(ticketOrderId, archivedUrl) {
     var canvas = document.getElementById('qrCanvas');
     if (!canvas || !ticketOrderId) return;
 
     // 短链接 /v/订单号：二维码更简单，微信更容易识别
-    var verifyUrl = window.location.origin + '/v/' + encodeURIComponent(ticketOrderId);
+    // 优先用随单存档的验票链接，保证与后台展示的二维码内容一致
+    var verifyUrl = archivedUrl || (window.location.origin + '/v/' + encodeURIComponent(ticketOrderId));
     var displayPx = 200;
     var dpr = Math.min(window.devicePixelRatio || 2, 3);
     var renderPx = Math.round(displayPx * dpr);

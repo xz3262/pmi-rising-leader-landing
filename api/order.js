@@ -5,6 +5,7 @@ const {
 } = require('../lib/zpay');
 const { insertOrder, markOrderPaid } = require('../lib/db');
 const { parseBody, json, requestMeta } = require('../lib/http');
+const { generateTicketQrBase64 } = require('../lib/ticket-qr');
 
 var TICKETS = {
   cert: { price: 799, channelPrice: 499, name: '持证人票' },
@@ -103,6 +104,17 @@ module.exports = async function handler(req, res) {
     return json(res, 500, { error: '支付未配置，请联系管理员' });
   }
 
+  // 门票二维码内容（验票链接）随单存档，后台可凭此还原同一张二维码
+  var verifyUrl = siteUrl + '/v/' + encodeURIComponent(outTradeNo);
+
+  // 二维码图片同步存档（仅几 KB）；生成失败不阻断下单，后台查看时会自愈补档
+  var qrPngBase64 = '';
+  try {
+    qrPngBase64 = await generateTicketQrBase64(verifyUrl);
+  } catch (err) {
+    console.error('[order] qr archive failed (non-fatal)', err);
+  }
+
   try {
     await insertOrder({
       merchant_order_no: outTradeNo,
@@ -120,6 +132,8 @@ module.exports = async function handler(req, res) {
       product_name: productName,
       price: price,
       pay_method: payMethod,
+      verify_url: verifyUrl,
+      qr_png_base64: qrPngBase64,
       client_ip: meta.clientIp,
       user_agent: meta.userAgent
     });

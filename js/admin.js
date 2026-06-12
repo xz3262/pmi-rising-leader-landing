@@ -113,6 +113,92 @@
     );
   }
 
+  /* ---- 最终海报合成（与 js/main.js 保持一致）：老记录无存档时现场合成并回填 ---- */
+  var POSTER_TEMPLATE_URL = '/assets/template-web.png';
+  var POSTER_WIN_LEFT = 0.1785;
+  var POSTER_WIN_BOTTOM = 0.6378;
+  var POSTER_BASE_FILL = '#6d3fa0';
+  var POSTER_ARCHIVE_MAX_W = 1080;
+
+  function loadImage(src) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () { resolve(img); };
+      img.onerror = function () { reject(new Error('图片加载失败')); };
+      img.src = src;
+    });
+  }
+
+  function drawCover(ctx, img, dx, dy, dw, dh) {
+    var iw = img.naturalWidth || img.width;
+    var ih = img.naturalHeight || img.height;
+    var scale = Math.max(dw / iw, dh / ih);
+    var sw = dw / scale, sh = dh / scale;
+    var sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+  }
+
+  function sampleCornerColor(img) {
+    try {
+      var c = document.createElement('canvas');
+      c.width = 1; c.height = 1;
+      var x = c.getContext('2d');
+      var sw = Math.min(24, img.naturalWidth || img.width || 1);
+      var sh = Math.min(24, img.naturalHeight || img.height || 1);
+      x.drawImage(img, 0, 0, sw, sh, 0, 0, 1, 1);
+      var d = x.getImageData(0, 0, 1, 1).data;
+      return 'rgb(' + d[0] + ',' + d[1] + ',' + d[2] + ')';
+    } catch (e) { return POSTER_BASE_FILL; }
+  }
+
+  function composeFinalPoster(portraitDataUrl) {
+    return Promise.all([loadImage(POSTER_TEMPLATE_URL), loadImage(portraitDataUrl)])
+      .then(function (imgs) {
+        var tpl = imgs[0], por = imgs[1];
+        var W = tpl.naturalWidth, H = tpl.naturalHeight;
+        var canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        var ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('无法获取画布上下文');
+        var winLeft = Math.round(W * POSTER_WIN_LEFT);
+        var winBottom = Math.round(H * POSTER_WIN_BOTTOM);
+        ctx.fillStyle = sampleCornerColor(por);
+        ctx.fillRect(0, 0, W, H);
+        drawCover(ctx, por, winLeft, 0, W - winLeft, winBottom);
+        ctx.drawImage(tpl, 0, 0, W, H);
+        return canvas.toDataURL('image/jpeg', 0.95);
+      });
+  }
+
+  // 现场合成后的海报回填存档（缩到 1080 宽控制体积），失败静默
+  function archiveFinalPoster(id, dataUrl) {
+    if (!id || !dataUrl) return;
+    loadImage(dataUrl)
+      .then(function (img) {
+        var w = img.naturalWidth || img.width;
+        var h = img.naturalHeight || img.height;
+        var scale = Math.min(1, POSTER_ARCHIVE_MAX_W / (w || 1));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(w * scale));
+        canvas.height = Math.max(1, Math.round(h * scale));
+        var ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('无法获取画布上下文');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.85);
+      })
+      .then(function (archiveUrl) {
+        return fetch('/api/poster', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Nominee-Admin-Key': currentKey
+          },
+          body: JSON.stringify({ id: id, finalPoster: archiveUrl })
+        });
+      })
+      .catch(function () { /* 回填失败不影响展示 */ });
+  }
+
   function showGate(message) {
     gate.hidden = false;
     tabsNav.hidden = true;
@@ -179,7 +265,9 @@
       var photoTag = n.hasPhoto
         ? '<span class="nom-admin__tag">有照片</span>'
         : '<span class="nom-admin__tag nom-admin__tag--muted">无照片</span>';
-      var posterTag = n.hasPoster ? '<span class="nom-admin__tag">有海报</span>' : '';
+      var posterTag = n.hasFinalPoster
+        ? '<span class="nom-admin__tag">有海报</span>'
+        : (n.hasPoster ? '<span class="nom-admin__tag">有人像</span>' : '');
       return (
         '<button type="button" class="nom-admin__card" data-nominee-id="' + n.id + '">' +
         '<div class="nom-admin__card-top">' +
@@ -242,9 +330,10 @@
         detailPoster.removeAttribute('src');
       }
       if (detailLoadFull) {
-        detailLoadFull.hidden = !(n.hasPhoto || n.hasPoster);
+        var hasPosterAny = n.hasFinalPoster || n.hasPoster;
+        detailLoadFull.hidden = !(n.hasPhoto || hasPosterAny);
         detailLoadFull.disabled = false;
-        detailLoadFull.textContent = n.hasPoster ? '查看原图与海报' : '查看原图';
+        detailLoadFull.textContent = hasPosterAny ? '查看原图与海报' : '查看原图';
       }
       detailRows.innerHTML = [
         rowHtml('姓名', n.name),
@@ -305,9 +394,25 @@
           detailPhoto.hidden = false;
           detailImg.src = n.photoDataUrl;
         }
-        if (detailPosterWrap && detailPoster && n.posterDataUrl) {
-          detailPosterWrap.hidden = false;
-          detailPoster.src = n.posterDataUrl;
+        if (detailPosterWrap && detailPoster) {
+          if (n.finalPosterDataUrl) {
+            // 优先展示存档的最终海报（用户实际拿到的那张）
+            detailPosterWrap.hidden = false;
+            detailPoster.src = n.finalPosterDataUrl;
+          } else if (n.posterDataUrl) {
+            // 老记录只有 AI 人像：按同一算法现场合成最终海报，并回填存档
+            composeFinalPoster(n.posterDataUrl).then(function (finalUrl) {
+              if (id !== detailId) return;
+              detailPosterWrap.hidden = false;
+              detailPoster.src = finalUrl;
+              archiveFinalPoster(id, finalUrl);
+            }).catch(function () {
+              if (id !== detailId) return;
+              // 模板加载失败等：退回展示 AI 人像
+              detailPosterWrap.hidden = false;
+              detailPoster.src = n.posterDataUrl;
+            });
+          }
         }
         detailLoadFull.hidden = true;
       }).catch(function () {
@@ -325,15 +430,117 @@
     return [o.company, o.title].filter(Boolean).join(' · ');
   }
 
+  /* ---- 订单：搜索 + 列表 + 详情（含入场二维码） ---- */
+  var ordersData = [];
+  var ordSearch = document.getElementById('ordAdminSearch');
+  var ordHint = document.getElementById('ordAdminHint');
+  var ordDetail = document.getElementById('ordAdminDetail');
+  var ordDetailTitle = document.getElementById('ordAdminDetailTitle');
+  var ordDetailQrWrap = document.getElementById('ordAdminDetailQrWrap');
+  var ordDetailQr = document.getElementById('ordAdminDetailQr');
+  var ordDetailRows = document.getElementById('ordAdminDetailRows');
+  var ordDetailOrderNo = '';
+
+  // 核票场景：按姓名为主，同时支持手机/邮箱/公司/订单号模糊匹配
+  function filterOrders(items, query) {
+    var q = String(query || '').trim().toLowerCase();
+    if (!q) return items;
+    return items.filter(function (o) {
+      return [o.name, o.nickname, o.phone, o.email, o.company, o.merchantOrderNo]
+        .some(function (v) { return String(v || '').toLowerCase().indexOf(q) !== -1; });
+    });
+  }
+
+  function orderVerifyUrl(o) {
+    return o.verifyUrl || (window.location.origin + '/v/' + encodeURIComponent(o.merchantOrderNo));
+  }
+
+  function openOrderDetail(o) {
+    if (!ordDetail) return;
+    ordDetailTitle.textContent = (o.name || '订单详情') + (o.ticketName ? ' · ' + o.ticketName : '');
+    var verifyUrl = orderVerifyUrl(o);
+    ordDetailOrderNo = o.merchantOrderNo || '';
+    if (ordDetailQrWrap && ordDetailQr) {
+      if (o.merchantOrderNo) {
+        // 先即时按存档链接渲染，再换成库里存档的二维码图片（内容一致，换图无感）
+        ordDetailQr.src = '/api/qr?w=440&data=' + encodeURIComponent(verifyUrl);
+        ordDetailQrWrap.hidden = false;
+        loadArchivedQr(o.merchantOrderNo);
+      } else {
+        ordDetailQrWrap.hidden = true;
+        ordDetailQr.removeAttribute('src');
+      }
+    }
+    var badge = o.statusBadge || {};
+    ordDetailRows.innerHTML = [
+      rowHtml('姓名', o.name),
+      rowHtml('昵称', o.nickname),
+      rowHtml('公司', o.company),
+      rowHtml('职务', o.title),
+      rowHtml('手机', o.phone),
+      rowHtml('邮箱', o.email),
+      rowHtml('微信', o.wechat),
+      rowHtml('行业', o.industry),
+      rowHtml('票种', o.ticketName),
+      rowHtml('类型', o.ticketType),
+      rowHtml('金额', o.amountLabel),
+      rowHtml('状态', badge.label || o.status),
+      rowHtml('支付方式', o.payMethodLabel),
+      rowHtml('邀请码 / 渠道码', o.invite),
+      rowHtml('订单号', o.merchantOrderNo),
+      rowHtml('平台交易号', o.transactionNo),
+      rowHtml('已验票次数', String(o.verifyCount || 0) + ' 次'),
+      rowHtml('下单时间', o.createdAt),
+      rowHtml('支付时间', o.paidAt),
+      // 纯文本展示：验票页打开即记一次验票，做成链接会被随手点击污染核票计数
+      rowHtml('验票链接', verifyUrl)
+    ].join('');
+    ordDetail.hidden = false;
+    document.body.classList.add('nom-admin-detail-open');
+  }
+
+  // 拉取库里存档的二维码图片（缺档时服务端会按存档链接自愈补档）
+  function loadArchivedQr(orderNo) {
+    if (!currentKey) return;
+    fetchJson('/api/orders-admin?order=' + encodeURIComponent(orderNo), currentKey).then(function (result) {
+      if (ordDetailOrderNo !== orderNo) return; // 详情已切换或关闭
+      var detail = result.ok && result.data && result.data.order;
+      if (detail && detail.qrDataUrl && ordDetailQr) {
+        ordDetailQr.src = detail.qrDataUrl;
+      }
+    }).catch(function () { /* 拉取失败保留实时渲染的二维码 */ });
+  }
+
+  function closeOrderDetail() {
+    if (!ordDetail) return;
+    ordDetail.hidden = true;
+    document.body.classList.remove('nom-admin-detail-open');
+    ordDetailOrderNo = '';
+    if (ordDetailQr) ordDetailQr.removeAttribute('src');
+  }
+
+  if (ordDetail) {
+    ordDetail.querySelectorAll('[data-ord-admin-close]').forEach(function (el) {
+      el.addEventListener('click', closeOrderDetail);
+    });
+  }
+
   function renderOrders(items) {
+    var total = ordersData.length;
+    var filtered = String(ordSearch && ordSearch.value || '').trim() !== '';
+    if (ordHint) ordHint.hidden = !total;
     if (!items.length) {
       tableWrap.hidden = true;
-      statusOrders.textContent = '暂无已出票订单';
+      statusOrders.textContent = filtered
+        ? '共 ' + total + ' 条订单 · 无匹配结果'
+        : '暂无已出票订单';
       return;
     }
     tableWrap.hidden = false;
-    statusOrders.textContent = '共 ' + items.length + ' 条订单';
-    tbody.innerHTML = items.map(function (o) {
+    statusOrders.textContent = filtered
+      ? '共 ' + total + ' 条订单 · 匹配 ' + items.length + ' 条'
+      : '共 ' + items.length + ' 条订单';
+    tbody.innerHTML = items.map(function (o, i) {
       var badge = o.statusBadge || {};
       var badgeHtml = '';
       if (badge.show && badge.label) {
@@ -341,18 +548,35 @@
         badgeHtml = '<span class="ord-admin__pill ord-admin__pill--' + variant + '">' + esc(badge.label) + '</span>';
       }
       return (
-        '<tr>' +
+        '<tr data-order-index="' + i + '">' +
         '<td data-label="购票人"><div class="ord-admin__name-cell">' +
         '<span class="ord-admin__name">' + esc(o.name) + '</span>' + badgeHtml + '</div></td>' +
         '<td data-label="公司 · 岗位">' + esc(companyTitle(o)) + '</td>' +
+        '<td data-label="手机">' + esc(o.phone) + '</td>' +
+        '<td data-label="邮箱">' + esc(o.email) + '</td>' +
         '<td data-label="票种">' + esc(o.ticketName) + '</td>' +
         '<td data-label="类型">' + esc(o.ticketType) + '</td>' +
         '<td data-label="金额">' + esc(o.amountLabel) + '</td>' +
+        '<td data-label="验票">' + esc(String(o.verifyCount || 0) + ' 次') + '</td>' +
         '<td data-label="购买时间">' + esc(o.purchasedAt) + '</td>' +
         '<td data-label="订单号"><span class="ord-admin__mono">' + esc(o.merchantOrderNo) + '</span></td>' +
         '</tr>'
       );
     }).join('');
+
+    tbody.querySelectorAll('[data-order-index]').forEach(function (tr) {
+      tr.addEventListener('click', function () {
+        var o = items[Number(tr.getAttribute('data-order-index'))];
+        if (o) openOrderDetail(o);
+      });
+    });
+  }
+
+  if (ordSearch) {
+    ordSearch.addEventListener('input', function () {
+      if (!loaded.orders) return;
+      renderOrders(filterOrders(ordersData, ordSearch.value));
+    });
   }
 
   function loadOrders(key) {
@@ -364,7 +588,8 @@
         return;
       }
       loaded.orders = true;
-      renderOrders(result.data.orders || []);
+      ordersData = result.data.orders || [];
+      renderOrders(filterOrders(ordersData, ordSearch ? ordSearch.value : ''));
     }).catch(function () {
       statusOrders.textContent = '网络错误，请稍后重试';
     });

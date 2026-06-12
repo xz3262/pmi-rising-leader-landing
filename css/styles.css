@@ -560,6 +560,8 @@ body::before {
 .footer__brand b { display: block; font-size: 15px; }
 .footer__brand span { display: block; font-size: 13px; color: var(--text-muted); }
 .footer__meta { display: flex; flex-direction: column; gap: 4px; text-align: right; font-size: 13px; color: var(--text-muted); }
+.footer__brochure { color: var(--lavender); text-decoration: underline; text-underline-offset: 3px; }
+.footer__brochure:hover { color: var(--text); }
 
 /* =========================================================
    支付跳转遮罩
@@ -896,11 +898,15 @@ body::before {
 body.nom-admin-detail-open { overflow: hidden; }
 
 /* 购票订单表格（管理后台内） */
+.ord-admin__toolbar { margin-bottom: 14px; }
+.ord-admin__search { max-width: 420px; }
+.ord-admin__hint { font-size: 12px; color: #9485ad; margin: -8px 0 12px; }
 .ord-admin__table-wrap {
   overflow-x: auto; border-radius: 14px; border: 1px solid rgba(255,255,255,.1);
   background: rgba(255,255,255,.03);
 }
-.ord-admin__table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 880px; }
+.ord-admin__table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1100px; }
+.ord-admin__table tbody tr { cursor: pointer; }
 .ord-admin__table th,
 .ord-admin__table td {
   padding: 12px 14px; text-align: left; vertical-align: top;
@@ -920,6 +926,14 @@ body.nom-admin-detail-open { overflow: hidden; }
 }
 .ord-admin__pill--paid { color: #0f5132; background: rgba(25,135,84,.16); border: 1px solid rgba(25,135,84,.28); }
 .ord-admin__pill--invite { color: #e8dcff; background: rgba(124,77,187,.22); border: 1px solid rgba(179,160,217,.45); }
+
+/* 订单详情：入场二维码（白底留边，便于现场扫码） */
+.ord-admin-detail__qr { display: grid; justify-items: center; gap: 8px; margin-bottom: 16px; }
+.ord-admin-detail__qr img {
+  width: 220px; height: 220px; border-radius: 14px; background: #fff; padding: 10px;
+  border: 1px solid rgba(255,255,255,.14);
+}
+.ord-admin-detail__qr-tip { font-size: 12px; color: #9485ad; margin: 0; }
 
 @media (max-width: 720px) {
   .ord-admin__table { min-width: 0; }

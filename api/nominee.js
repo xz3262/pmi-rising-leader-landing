@@ -1,5 +1,8 @@
 const { insertNominee, insertOrder, markOrderPaid } = require('../lib/db');
 const { parseBody, json, requestMeta } = require('../lib/http');
+const { env } = require('../lib/zpay');
+const { generateTicketQrBase64 } = require('../lib/ticket-qr');
+const { nomineePosterToken } = require('../lib/admin');
 
 // 提名嘉宾免费入场票：与购票出票同一套订单/验票体系，票号可被检票系统扫验
 var NOMINEE_TICKET_NAME = '百强新锐提名嘉宾票';
@@ -12,6 +15,15 @@ function generateNomineeOrderId() {
 // 出票失败不阻断信息提交：返回空票号，前端隐藏二维码区块
 async function issueNomineeTicket(body, meta) {
   var orderNo = generateNomineeOrderId();
+  var siteUrl = String(env('SITE_URL') || 'https://www.rising2026.com').replace(/\/$/, '');
+  var verifyUrl = siteUrl + '/v/' + encodeURIComponent(orderNo);
+  // 二维码图片同步存档；生成失败不阻断出票，后台查看时会自愈补档
+  var qrPngBase64 = '';
+  try {
+    qrPngBase64 = await generateTicketQrBase64(verifyUrl);
+  } catch (err) {
+    console.error('[nominee] qr archive failed (non-fatal)', err);
+  }
   await insertOrder({
     merchant_order_no: orderNo,
     name: String(body.name).trim(),
@@ -28,6 +40,8 @@ async function issueNomineeTicket(body, meta) {
     product_name: 'PMI Rising Leader 2026 ' + NOMINEE_TICKET_NAME,
     price: 0,
     pay_method: 'free',
+    verify_url: verifyUrl,
+    qr_png_base64: qrPngBase64,
     client_ip: meta.clientIp,
     user_agent: meta.userAgent
   });
@@ -37,7 +51,7 @@ async function issueNomineeTicket(body, meta) {
     paid_money: 0,
     buyer: 'NOMINEE'
   }, 'free');
-  return orderNo;
+  return { orderNo: orderNo, verifyUrl: verifyUrl };
 }
 
 // 手机号：含国际号码，前端会拼成「+区号 号码」。位数不固定，
@@ -114,11 +128,15 @@ module.exports = async function handler(req, res) {
 
   // 先出入场票（免费票直接置为已支付），拿到票号后随提名信息一并入库
   var ticketOrderNo = '';
+  var ticketVerifyUrl = '';
   try {
-    ticketOrderNo = await issueNomineeTicket(body, meta);
+    var issued = await issueNomineeTicket(body, meta);
+    ticketOrderNo = issued.orderNo;
+    ticketVerifyUrl = issued.verifyUrl;
   } catch (err) {
     console.error('[nominee] ticket issue failed', err);
     ticketOrderNo = '';
+    ticketVerifyUrl = '';
   }
 
   try {
@@ -147,7 +165,13 @@ module.exports = async function handler(req, res) {
       client_ip: meta.clientIp,
       user_agent: meta.userAgent
     });
-    return json(res, 200, { ok: true, id: id, ticketOrderNo: ticketOrderNo });
+    return json(res, 200, {
+      ok: true,
+      id: id,
+      posterToken: nomineePosterToken(id),
+      ticketOrderNo: ticketOrderNo,
+      ticketVerifyUrl: ticketVerifyUrl
+    });
   } catch (err) {
     console.error('[nominee] insert failed', err);
     return json(res, 500, { error: '提交失败，请稍后重试' });

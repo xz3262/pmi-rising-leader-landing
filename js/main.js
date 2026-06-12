@@ -922,6 +922,33 @@
       });
   }
 
+  // 合成海报回传存档（缩到 1080 宽、JPEG 0.85 控制体积）：供管理后台展示，失败静默不影响用户
+  var POSTER_ARCHIVE_MAX_W = 1080;
+  function archiveFinalPoster(id, dataUrl, token) {
+    if (!id || !dataUrl) return;
+    loadImage(dataUrl)
+      .then(function (img) {
+        var w = img.naturalWidth || img.width;
+        var h = img.naturalHeight || img.height;
+        var scale = Math.min(1, POSTER_ARCHIVE_MAX_W / (w || 1));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(w * scale));
+        canvas.height = Math.max(1, Math.round(h * scale));
+        var ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('无法获取画布上下文');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.85);
+      })
+      .then(function (archiveUrl) {
+        return fetch('/api/poster', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id, finalPoster: archiveUrl, token: token || '' })
+        });
+      })
+      .catch(function () { /* 存档失败不影响用户查看与下载 */ });
+  }
+
   /* =========================================================
      12. 第五屏 Nominee 获奖流程（多步弹窗）
      ========================================================= */
@@ -985,6 +1012,7 @@
 
     // ---- 专属海报状态机 ----
     var nomineeId = 0;
+    var posterToken = '';
     var posterStarted = false;
     var nposter = document.getElementById('nposter');
     var nposterLoading = document.getElementById('nposterLoading');
@@ -1007,6 +1035,7 @@
 
     function resetPoster() {
       nomineeId = 0;
+      posterToken = '';
       posterStarted = false;
       if (nposter) nposter.hidden = true;
       if (nposterImg) nposterImg.removeAttribute('src');
@@ -1020,9 +1049,10 @@
     var nticketNo = document.getElementById('nticketNo');
     var nticketSave = document.getElementById('nticketSave');
 
-    function showNomineeTicket(orderNo) {
+    function showNomineeTicket(orderNo, archivedUrl) {
       if (!nticket || !nticketQr || !orderNo) return;
-      var verifyUrl = window.location.origin + '/v/' + encodeURIComponent(orderNo);
+      // 优先用随单存档的验票链接，保证与后台展示的二维码内容一致
+      var verifyUrl = archivedUrl || (window.location.origin + '/v/' + encodeURIComponent(orderNo));
       var dpr = Math.min(window.devicePixelRatio || 2, 3);
       var renderPx = Math.round(200 * dpr);
       var qrUrl = '/api/qr?w=' + renderPx + '&data=' + encodeURIComponent(verifyUrl);
@@ -1034,14 +1064,19 @@
 
     function generatePoster() {
       if (!nomineeId || !nposter) return;
+      // 捕获本次请求的 id/token：生成可长达数十秒，期间用户可能关闭弹窗为下一位提交，
+      // 闭包若读实时 nomineeId 会把 A 的海报存档到 B 名下
+      var id = nomineeId;
+      var token = posterToken;
       showPosterState('loading');
       fetch('/api/poster', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: nomineeId })
+        body: JSON.stringify({ id: id })
       })
         .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, status: r.status, body: body }; }); })
         .then(function (res) {
+          if (id !== nomineeId) return null; // 已切换到新提交：丢弃过期结果
           if (res.status === 422 && res.body && res.body.noPhoto) {
             showPosterState('nophoto'); // 未上传照片：给出明确提示
             return null;
@@ -1052,12 +1087,14 @@
           return buildPosterDataUrl(res.body.posterDataUrl);
         })
         .then(function (finalUrl) {
-          if (!finalUrl) return;
+          if (!finalUrl || id !== nomineeId) return;
           if (nposterImg) nposterImg.src = finalUrl;
           if (nposterDownload) nposterDownload.href = finalUrl;
           showPosterState('result');
+          archiveFinalPoster(id, finalUrl, token);
         })
         .catch(function (err) {
+          if (id !== nomineeId) return; // 过期请求的报错不打扰新提交
           if (nposterErrorMsg) nposterErrorMsg.textContent = (err && err.message) ? err.message : '网络波动，请重试一次';
           showPosterState('error');
         });
@@ -1237,8 +1274,9 @@
           .then(function (res) {
             if (!res.ok || !res.body.ok) throw new Error((res.body && res.body.error) || '提交失败');
             nomineeId = Number(res.body.id || 0);
+            posterToken = String(res.body.posterToken || '');
             show(4);
-            showNomineeTicket(String(res.body.ticketOrderNo || ''));
+            showNomineeTicket(String(res.body.ticketOrderNo || ''), String(res.body.ticketVerifyUrl || ''));
             if (nomineeId && !posterStarted) { posterStarted = true; generatePoster(); }
           })
           .catch(function (err) {
