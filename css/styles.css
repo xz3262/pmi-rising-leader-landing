@@ -508,7 +508,7 @@ body::before {
 .reg__summary { margin-top: 4px; padding-top: 18px; border-top: 1px dashed var(--line-strong); }
 .reg__total { padding-inline: 2px; }
 .reg__pay-label { margin-bottom: 12px; font-size: 13px; font-weight: 600; color: var(--text-soft); text-align: center; letter-spacing: .04em; }
-.reg__pay { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.reg__pay { display: grid; grid-template-columns: 1fr; gap: 12px; }
 .reg__pay .btn--pay { padding-inline: 12px; font-size: 15px; }
 .btn--pay {
   display: inline-flex;
