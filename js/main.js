@@ -619,6 +619,10 @@
     var ticket = t && TICKETS[t.value] ? t.value : 'cert';
     var ticketInfo = TICKETS[ticket] || TICKETS.cert;
     var method = payMethod === 'free' ? 'free' : (payMethod === 'alipay' ? 'alipay' : 'wxpay');
+    // 渠道码须点击「确认」生效后才随单提交，否则后端会按渠道价收款，
+    // 与页面展示的全价不一致（免费票/测试票本就依赖邀请码，原样提交）
+    var invite = form.invite.value.trim();
+    if (ticket !== 'free' && ticket !== 'test' && !channelApplied) invite = '';
     return {
       name: form.name.value.trim(),
       nickname: form.nickname ? form.nickname.value.trim() : '',
@@ -628,7 +632,7 @@
       email: form.email.value.trim(),
       wechat: form.wechat.value.trim(),
       industry: form.industry.value,
-      invite: form.invite.value.trim(),
+      invite: invite,
       ticket: ticket,
       ticketName: ticketInfo.name,
       price: effectivePrice(ticket),

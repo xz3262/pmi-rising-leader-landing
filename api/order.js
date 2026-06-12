@@ -60,8 +60,9 @@ function validateBody(body) {
     if (!isFreeInvite(body.invite)) errors.push('邀请码无效');
   } else if (body.ticket === 'test') {
     if (!isTestInvite(body.invite)) errors.push('测试票需使用邀请码 TEST');
-  } else if (body.payMethod !== 'wxpay' && body.payMethod !== 'alipay') {
-    errors.push('请选择支付方式');
+  } else if (body.payMethod !== 'wxpay') {
+    // 支付宝渠道未就绪，暂只放行微信支付（渠道开通后此处加回 'alipay'）
+    errors.push('当前仅支持微信支付');
   }
   return errors;
 }
